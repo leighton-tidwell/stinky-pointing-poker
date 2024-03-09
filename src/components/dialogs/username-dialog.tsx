@@ -28,6 +28,7 @@ export const UsernameDialog = ({
       setUsername(localStorageUsername);
     }
     setIsMounted(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!isMounted) {

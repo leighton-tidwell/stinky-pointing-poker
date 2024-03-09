@@ -19,7 +19,7 @@ export default function Home() {
           <CardTitle className="font-extrabold">
             Stinky Pointing Poker
           </CardTitle>
-          <CardDescription>Created by ol' Tidwellius</CardDescription>
+          <CardDescription>Created by ol&apos; Tidwellius</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-2">
           <JoinSessionForm />
