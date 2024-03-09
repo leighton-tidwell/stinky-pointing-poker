@@ -14,7 +14,7 @@ import { Separator } from "@/components/ui/separator";
 export default function Home() {
   return (
     <main className="flex h-screen items-center justify-center">
-      <Card className="w-1/2">
+      <Card className="m-2 md:m-0 md:w-1/2">
         <CardHeader>
           <CardTitle className="font-extrabold">
             Stinky Pointing Poker
