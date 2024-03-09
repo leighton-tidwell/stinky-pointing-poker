@@ -17,7 +17,7 @@ type AverageVoteCardProps = {
 };
 
 const calculateAverageVote = (votes: Vote[]) => {
-  const total = votes.reduce((acc, vote) => {
+  const total = votes?.reduce((acc, vote) => {
     return acc + parseInt(vote.value, 10);
   }, 0);
   return (total / votes.length).toFixed(2);
