@@ -16,11 +16,15 @@ type AverageVoteCardProps = {
   votes: Vote[];
 };
 
-const calculateAverageVote = (votes: Vote[]) => {
-  const total = votes?.reduce((acc, vote) => {
-    return acc + parseInt(vote.value, 10);
-  }, 0);
-  return (total / votes.length).toFixed(2);
+const calculateAverageVote = (votes?: Vote[]) => {
+  const total =
+    votes?.reduce((acc, vote) => {
+      return acc + parseInt(vote.value, 10);
+    }, 0) ?? 0;
+
+  const totalVotes = votes?.length ?? 0;
+
+  return (total / totalVotes).toFixed(2);
 };
 
 export const AverageVoteCard = ({ showVotes, votes }: AverageVoteCardProps) => {
