@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/react";
 
 import { cn } from "@/lib/utils";
 import { Viewport } from "next";
+import type { Metadata } from "next";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -36,4 +37,10 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+};
+
+export const metadata: Metadata = {
+  title: "Stinky Pointing Poker",
+  description:
+    "Online planning poker session app for distributed teams. Inspired by pointing poker.",
 };
