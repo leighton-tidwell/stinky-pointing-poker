@@ -47,7 +47,9 @@ export const VotingResultsCard = ({
           {sortedVotesByUserName.map((vote: Vote) => (
             <li key={vote.id} className="flex gap-2">
               <PersonStanding /> {vote.voterName} voted{" "}
-              {showVotes && vote.value}
+              {showVotes && (
+                <span className="font-extrabold">{vote.value}</span>
+              )}
             </li>
           ))}
         </ul>
