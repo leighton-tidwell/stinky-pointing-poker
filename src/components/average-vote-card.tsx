@@ -2,11 +2,9 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Vote } from "@/schema/vote";
 
 const POINT_VALUES = ["1", "2", "3", "5", "8", "13", "21", "?"];
@@ -17,12 +15,14 @@ type AverageVoteCardProps = {
 };
 
 const calculateAverageVote = (votes?: Vote[]) => {
+  const filteredVotes = votes?.filter((vote) => vote.value !== "?");
+
   const total =
-    votes?.reduce((acc, vote) => {
+    filteredVotes?.reduce((acc, vote) => {
       return acc + parseInt(vote.value, 10);
     }, 0) ?? 0;
 
-  const totalVotes = votes?.length ?? 0;
+  const totalVotes = filteredVotes?.length ?? 0;
 
   return (total / totalVotes).toFixed(2);
 };
