@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Github, GithubIcon } from "lucide-react";
 
 export default function Home() {
   return (
@@ -28,6 +29,13 @@ export default function Home() {
           <Separator />
           <span className="m-auto flex-1">Or you can start a new one 👌</span>
           <StartSessionButton />
+          <a
+            title="Star it on Github"
+            target="_blank"
+            href="https://github.com/leighton-tidwell/stinky-pointing-poker"
+          >
+            <Github size={45} className="rounded-full bg-slate-200 p-3" />
+          </a>
         </CardFooter>
       </Card>
     </main>
