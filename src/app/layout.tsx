@@ -1,5 +1,6 @@
 import "@/styles/globals.css";
 import { Inter as FontSans } from "next/font/google";
+import { Analytics } from "@vercel/analytics/react";
 
 import { cn } from "@/lib/utils";
 import { Viewport } from "next";
@@ -24,6 +25,7 @@ export default function RootLayout({
         )}
       >
         {children}
+        <Analytics />
       </body>
     </html>
   );
