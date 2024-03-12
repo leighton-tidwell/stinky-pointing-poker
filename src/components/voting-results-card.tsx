@@ -31,6 +31,10 @@ export const VotingResultsCard = ({
     return <Skeleton className="flex flex-col gap-2 p-2" />;
   }
 
+  const sortedVotesByUserName = votes?.sort((a: Vote, b: Vote) =>
+    a.voterName.localeCompare(b.voterName),
+  );
+
   return (
     <Card className="flex h-fit flex-col gap-2 p-2">
       <CardHeader>
@@ -40,7 +44,7 @@ export const VotingResultsCard = ({
       <CardContent className="max-h-[350px] overflow-auto">
         {votes.length === 0 && <div>No votes yet</div>}
         <ul>
-          {votes.map((vote: Vote) => (
+          {sortedVotesByUserName.map((vote: Vote) => (
             <li key={vote.id} className="flex gap-2">
               <PersonStanding /> {vote.voterName} voted{" "}
               {showVotes && vote.value}
