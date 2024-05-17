@@ -7,7 +7,7 @@ import {
   numeric,
   integer,
 } from "drizzle-orm/pg-core";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 
 export const votes = pgTable("vote", {
@@ -33,18 +33,20 @@ export const castVote = async (
   voterName: string,
   value: string,
 ) => {
-  // First lets see if there is a vote with the voters name
+  // First lets see if there is a vote with the voters name for the current session
   const existingVote = await db
     .select()
     .from(votes)
-    .where(eq(votes.voterName, voterName));
+    .where(and(eq(votes.voterName, voterName), eq(votes.sessionId, sessionId)));
 
   // If there is, we will update the vote
   if (existingVote.length > 0) {
     const updateResult = await db
       .update(votes)
       .set({ value })
-      .where(eq(votes.voterName, voterName))
+      .where(
+        and(eq(votes.voterName, voterName), eq(votes.sessionId, sessionId)),
+      )
       .returning();
 
     return updateResult[0];
