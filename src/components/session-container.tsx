@@ -16,6 +16,7 @@ import { fetcher } from "@/lib/utils";
 import { VotingResultsCard } from "./voting-results-card";
 import { PointVotingCard } from "./point-voting-card";
 import { AverageVoteCard } from "./average-vote-card";
+import { StoryPointsKeyTable } from "./story-points-key-table";
 
 type SessionContainerProps = {
   initialSession: any;
@@ -182,7 +183,7 @@ export const SessionContainer = ({
           </Button>
         </div>
       </div>
-
+      <StoryPointsKeyTable />
       {/* Point Voting Panel */}
       <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-3">
         {/* Point value vote buttons */}
