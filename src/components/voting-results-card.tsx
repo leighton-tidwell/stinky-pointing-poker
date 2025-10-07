@@ -105,13 +105,13 @@ export const VotingResultsCard = ({
           Who&apos;s online and where the votes landed
         </CardDescription>
       </CardHeader>
-      <CardContent className="max-h-[340px] space-y-3 overflow-auto p-0">
+      <CardContent className="space-y-3 p-0">
         {userStatuses.length === 0 && (
           <div className="rounded-lg border border-dashed border-primary/30 bg-secondary/30 p-6 text-center text-sm text-muted-foreground">
             No operators detected yet. Waiting for connections…
           </div>
         )}
-        <ul className="space-y-2 text-sm [font-family:var(--font-mono),monospace]">
+        <ul className="max-h-[40vh] space-y-2 overflow-auto pr-2 text-sm [font-family:var(--font-mono),monospace] sm:max-h-[20vh]">
           {userStatuses.map((user) => (
             <li
               key={user.username}
