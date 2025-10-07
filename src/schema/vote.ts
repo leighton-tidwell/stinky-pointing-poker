@@ -1,12 +1,4 @@
-import {
-  boolean,
-  pgTable,
-  serial,
-  text,
-  timestamp,
-  numeric,
-  integer,
-} from "drizzle-orm/pg-core";
+import { pgTable, serial, text } from "drizzle-orm/pg-core";
 import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db";
 
@@ -14,22 +6,22 @@ export const votes = pgTable("vote", {
   id: serial("id").primaryKey(),
   voterName: text("voterName").notNull(),
   value: text("vote").notNull(),
-  sessionId: text("sessionId").notNull(),
+  sessionSlug: text("sessionSlug").notNull(),
 });
 
 export type Vote = typeof votes.$inferSelect;
 
-export const getVotesBySessionId = async (sessionId: string) => {
+export const getVotesBySessionSlug = async (sessionSlug: string) => {
   const selectResult = await db
     .select()
     .from(votes)
-    .where(eq(votes.sessionId, sessionId));
+    .where(eq(votes.sessionSlug, sessionSlug));
 
   return selectResult;
 };
 
 export const castVote = async (
-  sessionId: string,
+  sessionSlug: string,
   voterName: string,
   value: string,
 ) => {
@@ -37,7 +29,9 @@ export const castVote = async (
   const existingVote = await db
     .select()
     .from(votes)
-    .where(and(eq(votes.voterName, voterName), eq(votes.sessionId, sessionId)));
+    .where(
+      and(eq(votes.voterName, voterName), eq(votes.sessionSlug, sessionSlug)),
+    );
 
   // If there is, we will update the vote
   if (existingVote.length > 0) {
@@ -45,7 +39,7 @@ export const castVote = async (
       .update(votes)
       .set({ value })
       .where(
-        and(eq(votes.voterName, voterName), eq(votes.sessionId, sessionId)),
+        and(eq(votes.voterName, voterName), eq(votes.sessionSlug, sessionSlug)),
       )
       .returning();
 
@@ -55,7 +49,7 @@ export const castVote = async (
   const insertResult = await db
     .insert(votes)
     .values({
-      sessionId,
+      sessionSlug,
       voterName,
       value,
     })
@@ -64,8 +58,8 @@ export const castVote = async (
   return insertResult[0];
 };
 
-export const clearVotesForSession = async (sessionId: string) => {
-  await db.delete(votes).where(eq(votes.sessionId, sessionId));
+export const clearVotesForSession = async (sessionSlug: string) => {
+  await db.delete(votes).where(eq(votes.sessionSlug, sessionSlug));
 
   return null;
 };

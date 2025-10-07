@@ -11,12 +11,12 @@ const getSupabaseClient = () => {
 };
 
 const broadcastToChannel = async (
-  sessionId: number,
+  sessionSlug: string,
   event: string,
   payload: any,
 ) => {
   const supabase = getSupabaseClient();
-  const channelName = `session:${sessionId}:updates`;
+  const channelName = `session:${sessionSlug}:updates`;
   const channel = supabase.channel(channelName);
 
   try {
@@ -47,16 +47,16 @@ const broadcastToChannel = async (
 };
 
 export const broadcastSessionUpdate = async (
-  sessionId: number,
+  sessionSlug: string,
   updates: Record<string, any>,
 ) => {
-  await broadcastToChannel(sessionId, "session-update", updates);
+  await broadcastToChannel(sessionSlug, "session-update", updates);
 };
 
-export const broadcastVoteCast = async (sessionId: number, vote: any) => {
-  await broadcastToChannel(sessionId, "vote-cast", vote);
+export const broadcastVoteCast = async (sessionSlug: string, vote: any) => {
+  await broadcastToChannel(sessionSlug, "vote-cast", vote);
 };
 
-export const broadcastVotesCleared = async (sessionId: number) => {
-  await broadcastToChannel(sessionId, "votes-cleared", {});
+export const broadcastVotesCleared = async (sessionSlug: string) => {
+  await broadcastToChannel(sessionSlug, "votes-cleared", {});
 };

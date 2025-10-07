@@ -2,28 +2,19 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { RealtimeChannel } from "@supabase/supabase-js";
-
-type Session = {
-  id: number;
-  name: string;
-  storyDescription: string;
-  showVotes: boolean;
-  createdBy: string | null;
-  createdAt: Date;
-};
-
-type Vote = { id: number; voterName: string; value: string; sessionId: string };
+import type { SessionRecord } from "@/schema/session";
+import type { Vote } from "@/schema/vote";
 
 export const useRealtimeSession = (
-  initialSession: Session,
+  initialSession: SessionRecord,
   initialVotes: Vote[],
 ) => {
-  const [session, setSession] = useState<Session>(initialSession);
+  const [session, setSession] = useState<SessionRecord>(initialSession);
   const [votes, setVotes] = useState<Vote[]>(initialVotes);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
 
   useEffect(() => {
-    const channelName = `session:${initialSession.id}:updates`;
+    const channelName = `session:${initialSession.slug}:updates`;
     const realtimeChannel = supabase.channel(channelName);
 
     realtimeChannel
@@ -33,14 +24,16 @@ export const useRealtimeSession = (
       .on("broadcast", { event: "vote-cast" }, ({ payload }) => {
         setVotes((prev) => {
           const existingIndex = prev.findIndex(
-            (v) => v.voterName === payload.voterName,
+            (vote) => vote.voterName === payload.voterName,
           );
+
           if (existingIndex !== -1) {
             const updated = [...prev];
-            updated[existingIndex] = payload;
+            updated[existingIndex] = payload as Vote;
             return updated;
           }
-          return [...prev, payload];
+
+          return [...prev, payload as Vote];
         });
       })
       .on("broadcast", { event: "votes-cleared" }, () => {
@@ -53,7 +46,7 @@ export const useRealtimeSession = (
     return () => {
       realtimeChannel.unsubscribe();
     };
-  }, [initialSession.id]);
+  }, [initialSession.slug]);
 
   return { session, votes, channel };
 };

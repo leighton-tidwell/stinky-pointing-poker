@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -23,13 +23,13 @@ const generateOperatorId = () => {
   return `Operator-${randomNum}`;
 };
 
-export const usePresence = (sessionId: string, username: string) => {
+export const usePresence = (sessionSlug: string, username: string) => {
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
   const [presenceUsers, setPresenceUsers] = useState<PresenceUser[]>([]);
   const [operatorId] = useState(() => generateOperatorId());
 
   useEffect(() => {
-    const channelName = `session:${sessionId}`;
+    const channelName = `session:${sessionSlug}`;
     const presenceChannel = supabase.channel(channelName, {
       config: {
         presence: { key: operatorId },
@@ -70,7 +70,7 @@ export const usePresence = (sessionId: string, username: string) => {
     return () => {
       presenceChannel.unsubscribe();
     };
-  }, [sessionId, operatorId, username]);
+  }, [sessionSlug, operatorId, username]);
 
   // Update presence when username changes
   useEffect(() => {

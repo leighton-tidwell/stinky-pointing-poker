@@ -1,5 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { updateSession } from "@/actions/session";
@@ -13,8 +19,28 @@ import { AverageVoteCard } from "./average-vote-card";
 import { usePresence } from "@/hooks/usePresence";
 import { useRealtimeSession } from "@/hooks/useRealtimeSession";
 import { usePing } from "@/hooks/usePing";
+import {
+  getDeckDefinition,
+  resolveDeckValues,
+  supportsAverageForDeck,
+  type DeckPreset,
+} from "@/lib/decks";
+import type { SessionRecord } from "@/schema/session";
+import type { Vote } from "@/schema/vote";
+import { CopySessionCodeField } from "@/components/copy-session-code-field";
 
-type SessionContainerProps = { initialSession: any; initialVotes: any };
+const metricItemClasses =
+  "flex items-center justify-between rounded-lg border border-primary/20 bg-secondary/30 px-4 py-3 text-foreground/80";
+
+const formatBoolean = (value: boolean) => (value ? "On" : "Off");
+
+const sanitizeDeckPreset = (preset: SessionRecord["deckPreset"]) =>
+  (preset as DeckPreset) ?? "fibonacci";
+
+type SessionContainerProps = {
+  initialSession: SessionRecord;
+  initialVotes: Vote[];
+};
 
 export const SessionContainer = ({
   initialSession,
@@ -25,25 +51,55 @@ export const SessionContainer = ({
   const [initialLoad, setInitialLoad] = useState(true);
   const [username, setUsername] = useState("");
   const [storyDescription, setStoryDescription] = useState(
-    initialSession?.storyDescription,
+    initialSession?.storyDescription ?? "",
   );
   const [loading, setIsLoading] = useState(false);
+
   const { presenceUsers, operatorId, activeOperatorsCount, channel } =
-    usePresence(initialSession.id, username);
+    usePresence(initialSession.slug, username);
   const { ping, isStable } = usePing(channel);
 
-  const handleUpdateDescription = async () => {
+  const voteList = useMemo(() => (Array.isArray(votes) ? votes : []), [votes]);
+  const votesLocked = session?.showVotes;
+  const isCreator = session?.createdBy === operatorId;
+
+  const deckPreset = sanitizeDeckPreset(session?.deckPreset);
+  const deckDefinition = useMemo(() => getDeckDefinition(deckPreset), [deckPreset]);
+  const deckValues = useMemo(
+    () =>
+      resolveDeckValues(deckPreset, {
+        includeQuestionMark: session?.includeQuestionMark ?? true,
+        includeCoffeeBreak: session?.includeCoffeeBreak ?? false,
+      }),
+    [deckPreset, session?.includeQuestionMark, session?.includeCoffeeBreak],
+  );
+  const deckSupportsAverage = supportsAverageForDeck(deckPreset);
+
+  const autoRevealTriggeredRef = useRef(false);
+
+  useEffect(() => {
+    if (session) {
+      setStoryDescription(session.storyDescription ?? "");
+    }
+  }, [session]);
+
+  const handleUpdateDescription = useCallback(async () => {
+    if (!storyDescription.trim()) {
+      setStoryDescription("");
+    }
     setIsLoading(true);
     try {
-      await updateSession(session.id.toString(), { storyDescription });
+      await updateSession(session.id.toString(), {
+        storyDescription: storyDescription.trim(),
+      });
     } catch (error) {
       console.error(error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [session.id, storyDescription]);
 
-  const handleShowVotes = async () => {
+  const handleShowVotes = useCallback(async () => {
     setIsLoading(true);
     try {
       await updateSession(session.id.toString(), { showVotes: true });
@@ -52,9 +108,9 @@ export const SessionContainer = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [session.id]);
 
-  const handleHideVotes = async () => {
+  const handleHideVotes = useCallback(async () => {
     setIsLoading(true);
     try {
       await updateSession(session.id.toString(), { showVotes: false });
@@ -63,36 +119,63 @@ export const SessionContainer = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [session.id]);
 
-  const handleCastVote = async (value: string) => {
-    await castVote(session.id.toString(), username, value);
-  };
+  const handleCastVote = useCallback(
+    async (value: string) => {
+      await castVote(session.slug, username || operatorId, value);
+    },
+    [session.slug, username, operatorId],
+  );
 
-  const handleClearVotes = async () => {
+  const handleClearVotes = useCallback(async () => {
     setIsLoading(true);
-    await clearVotesForSession(session.id.toString());
-    await updateSession(session.id.toString(), {
-      storyDescription: "",
-      showVotes: false,
-    });
-    setIsLoading(false);
-  };
+    try {
+      await clearVotesForSession(session.slug);
+      await updateSession(session.id.toString(), {
+        storyDescription: "",
+        showVotes: false,
+      });
+      setStoryDescription("");
+      autoRevealTriggeredRef.current = false;
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [session.id, session.slug]);
 
   useEffect(() => {
-    if (session) {
-      setStoryDescription(session.storyDescription);
+    if (!session.autoReveal || session.showVotes || !isCreator) {
+      autoRevealTriggeredRef.current = false;
+      return;
     }
-  }, [session]);
 
-  const voteList = Array.isArray(votes) ? votes : [];
-  const votesLocked = session?.showVotes;
-  const isCreator = session?.createdBy === operatorId;
+    const activeUsers = presenceUsers.filter((user) => !user.isTemporary);
+    if (activeUsers.length === 0) return;
+
+    const everyoneVoted = activeUsers.every((user) =>
+      voteList.some((vote) => vote.voterName === user.username),
+    );
+
+    if (everyoneVoted && !autoRevealTriggeredRef.current) {
+      autoRevealTriggeredRef.current = true;
+      handleShowVotes();
+    }
+  }, [
+    session.autoReveal,
+    session.showVotes,
+    isCreator,
+    presenceUsers,
+    voteList,
+    handleShowVotes,
+  ]);
 
   return (
     <div className="flex flex-col gap-6">
       <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
-        <div className="space-y-3">
+        <div className="space-y-4">
+          <CopySessionCodeField code={session.slug} />
           <label
             htmlFor="story-description"
             className="text-xs uppercase tracking-[0.3em] text-muted-foreground"
@@ -119,13 +202,7 @@ export const SessionContainer = ({
                 onClick={handleUpdateDescription}
                 className="gap-2"
               >
-                {loading ? (
-                  <Spinner />
-                ) : (
-                  <>
-                    <span>Sync Story</span>
-                  </>
-                )}
+                {loading ? <Spinner /> : <span>Sync Story</span>}
               </Button>
               <Button
                 disabled={loading}
@@ -133,17 +210,11 @@ export const SessionContainer = ({
                 variant="outline"
                 className="gap-2 border-primary/30 text-primary"
               >
-                {loading ? (
-                  <Spinner />
-                ) : votesLocked ? (
-                  "Mask Votes"
-                ) : (
-                  "Reveal Votes"
-                )}
+                {loading ? <Spinner /> : votesLocked ? "Mask Votes" : "Reveal Votes"}
               </Button>
               <Button
                 disabled={loading}
-                onClick={() => handleClearVotes()}
+                onClick={handleClearVotes}
                 variant="destructive"
                 className="gap-2"
               >
@@ -160,19 +231,13 @@ export const SessionContainer = ({
           )}
         </div>
         <div className="grid h-full gap-3 rounded-xl border border-primary/15 bg-secondary/20 p-4 text-xs uppercase tracking-[0.35em] text-muted-foreground">
-          <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-secondary/30 px-4 py-3 text-foreground/80">
+          <div className={metricItemClasses}>
             <span>Active operators</span>
             <span className="text-lg font-semibold text-primary">
               {activeOperatorsCount}
             </span>
           </div>
-          <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-secondary/30 px-4 py-3 text-foreground/80">
-            <span>Vote status</span>
-            <span className="text-lg font-semibold text-primary">
-              {votesLocked ? "Decrypted" : "Encrypted"}
-            </span>
-          </div>
-          <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-secondary/30 px-4 py-3 text-foreground/80">
+          <div className={metricItemClasses}>
             <span>Ping</span>
             <span
               className={`text-lg font-semibold ${
@@ -189,21 +254,26 @@ export const SessionContainer = ({
         </div>
       </div>
 
-      {/* Point Voting Panel */}
       <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-3">
-        {/* Point value vote buttons */}
-        <PointVotingCard handleCastVote={handleCastVote} />
+        <PointVotingCard
+          handleCastVote={handleCastVote}
+          deckValues={deckValues}
+          deckLabel={deckDefinition.label}
+          deckDescription={deckDefinition.description}
+        />
 
-        {/* Voting Results */}
         <VotingResultsCard
-          sessionId={session.id.toString()}
+          sessionSlug={session.slug}
           showVotes={session.showVotes}
           presenceUsers={presenceUsers}
           votes={votes}
         />
 
-        {/* Voting average */}
-        <AverageVoteCard showVotes={session.showVotes} votes={votes} />
+        <AverageVoteCard
+          showVotes={session.showVotes}
+          votes={votes}
+          supportsAverage={deckSupportsAverage}
+        />
       </div>
       {initialLoad && (
         <UsernameDialog

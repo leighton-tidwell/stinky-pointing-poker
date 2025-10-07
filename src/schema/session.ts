@@ -1,15 +1,43 @@
-import { boolean, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 
-export const sessions = pgTable("session", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  storyDescription: text("storyDescription").default(""),
-  showVotes: boolean("showVotes").default(false),
-  createdBy: text("createdBy"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-});
+export const sessions = pgTable(
+  "session",
+  {
+    id: serial("id").primaryKey(),
+    slug: text("slug").notNull(),
+    name: text("name").notNull(),
+    storyDescription: text("storyDescription").default(""),
+    showVotes: boolean("showVotes").default(false),
+    deckPreset: text("deckPreset").notNull().default("fibonacci"),
+    includeQuestionMark: boolean("includeQuestionMark").notNull().default(true),
+    includeCoffeeBreak: boolean("includeCoffeeBreak").notNull().default(false),
+    autoReveal: boolean("autoReveal").notNull().default(false),
+    createdBy: text("createdBy"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  (table) => [uniqueIndex("session_slug_idx").on(table.slug)],
+);
+
+export type SessionRecord = typeof sessions.$inferSelect;
+
+export type CreateSessionData = {
+  slug: string;
+  name?: string;
+  createdBy?: string;
+  deckPreset?: string;
+  includeQuestionMark?: boolean;
+  includeCoffeeBreak?: boolean;
+  autoReveal?: boolean;
+};
 
 export const getSessionTable = async () => {
   const selectResult = await db.select().from(sessions);
@@ -26,10 +54,35 @@ export const getSessionById = async (id: number) => {
   return selectResult[0];
 };
 
-export const createSession = async (createdBy?: string) => {
+export const getSessionBySlug = async (slug: string) => {
+  const selectResult = await db
+    .select()
+    .from(sessions)
+    .where(eq(sessions.slug, slug));
+
+  return selectResult[0];
+};
+
+export const createSession = async ({
+  slug,
+  name,
+  createdBy,
+  deckPreset,
+  includeQuestionMark,
+  includeCoffeeBreak,
+  autoReveal,
+}: CreateSessionData) => {
   const insertResult = await db
     .insert(sessions)
-    .values({ name: "New Session", createdBy })
+    .values({
+      slug,
+      name: name?.trim() ? name.trim() : "",
+      createdBy,
+      deckPreset: deckPreset ?? "fibonacci",
+      includeQuestionMark: includeQuestionMark ?? true,
+      includeCoffeeBreak: includeCoffeeBreak ?? false,
+      autoReveal: autoReveal ?? false,
+    })
     .returning();
 
   return insertResult[0];

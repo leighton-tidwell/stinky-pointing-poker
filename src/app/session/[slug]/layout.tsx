@@ -1,29 +1,41 @@
+import { ReactNode } from "react";
 import { Home, Github } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getSessionBySlug } from "@/schema/session";
 
-export default function SessionLayout({
+export default async function SessionLayout({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+  params,
+}: Readonly<{
+  children: ReactNode;
+  params: Promise<{ slug: string }>;
+}>) {
+  const { slug } = await params;
+  const session = await getSessionBySlug(slug);
+
+  if (!session) {
+    redirect("/");
+  }
+
+  const heading = session.name?.trim()
+    ? session.name
+    : "Stinky Pointing Poker Console";
+
   return (
     <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-10 px-6 py-10">
       <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-secondary/30 px-8 py-7 shadow-[0_18px_60px_rgba(6,20,11,0.55)] backdrop-blur">
         <div className="absolute -right-20 -top-24 h-56 w-56 rounded-full bg-primary/15 blur-3xl" />
         <div className="absolute bottom-0 left-10 h-36 w-36 rounded-full bg-accent/10 blur-3xl" />
 
-        <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+        <div className="relative flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
           <div className="space-y-4">
             <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-secondary/40 px-4 py-1 text-xs uppercase tracking-[0.35em] text-primary">
               <span className="size-2 rounded-full bg-primary animate-pulse" />
               Session live
             </span>
             <div className="space-y-3">
-              <h1 className="text-3xl font-semibold text-primary">
-                Stinky Pointing Poker Console
-              </h1>
-              <p className="max-w-xl text-sm text-muted-foreground">
-                Coordinate estimates from anywhere. Reveal only when you&apos;re
-                ready to lock consensus.
-              </p>
+              <h1 className="text-3xl font-semibold text-primary">{heading}</h1>
             </div>
           </div>
 

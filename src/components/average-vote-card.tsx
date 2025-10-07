@@ -8,27 +8,35 @@ import {
 } from "@/components/ui/card";
 import { Vote } from "@/schema/vote";
 import { RollingNumber } from "./rolling-number";
+import { isNumericVoteValue } from "@/lib/decks";
 
-const POINT_VALUES = ["1", "2", "3", "5", "8", "13", "21", "?"];
-
-type AverageVoteCardProps = { showVotes: boolean; votes: Vote[] };
-
-const calculateAverageVote = (votes?: Vote[]) => {
-  const filteredVotes = votes?.filter((vote) => vote.value !== "?");
-
-  const total =
-    filteredVotes?.reduce((acc, vote) => {
-      return acc + parseInt(vote.value, 10);
-    }, 0) ?? 0;
-
-  const totalVotes = filteredVotes?.length ?? 0;
-
-  return total / totalVotes;
+type AverageVoteCardProps = {
+  showVotes: boolean;
+  votes: Vote[];
+  supportsAverage: boolean;
 };
 
-export const AverageVoteCard = ({ showVotes, votes }: AverageVoteCardProps) => {
-  const hasVotes = votes?.length ?? 0;
-  const averageValue = hasVotes > 0 ? calculateAverageVote(votes) : 0;
+const calculateAverageVote = (votes?: Vote[]) => {
+  const numericVotes = votes?.filter((vote) => isNumericVoteValue(vote.value));
+
+  if (!numericVotes || numericVotes.length === 0) {
+    return null;
+  }
+
+  const total = numericVotes.reduce((acc, vote) => acc + Number(vote.value), 0);
+
+  return total / numericVotes.length;
+};
+
+export const AverageVoteCard = ({
+  showVotes,
+  votes,
+  supportsAverage,
+}: AverageVoteCardProps) => {
+  const averageValue = calculateAverageVote(votes ?? []);
+  const hasVotes = (votes?.length ?? 0) > 0;
+
+  const canDisplayAverage = supportsAverage && averageValue !== null;
 
   return (
     <Card className="flex h-fit flex-col gap-4 p-4">
@@ -41,7 +49,12 @@ export const AverageVoteCard = ({ showVotes, votes }: AverageVoteCardProps) => {
         </CardDescription>
       </CardHeader>
       <CardContent className="mt-auto flex flex-col gap-6 p-0">
-        {!hasVotes ? (
+        {!supportsAverage ? (
+          <div className="rounded-lg border border-dashed border-primary/30 bg-secondary/30 p-6 text-sm text-muted-foreground">
+            This deck speaks in vibes, not velocity. Swap to a numeric deck to
+            chart an average signal.
+          </div>
+        ) : !hasVotes ? (
           <div className="rounded-lg border border-dashed border-primary/30 bg-secondary/30 p-6 text-sm text-muted-foreground">
             Awaiting transmissions. Once everyone locks in, the average will
             materialise here.
@@ -53,17 +66,25 @@ export const AverageVoteCard = ({ showVotes, votes }: AverageVoteCardProps) => {
             </span>
             <div className="flex items-baseline gap-3">
               {showVotes ? (
-                <RollingNumber
-                  value={averageValue}
-                  className="text-5xl font-bold text-primary"
-                  decimalPlaces={2}
-                  colorPulseOnUpdate
-                />
+                canDisplayAverage ? (
+                  <RollingNumber
+                    value={averageValue ?? 0}
+                    className="text-5xl font-bold text-primary"
+                    decimalPlaces={2}
+                    colorPulseOnUpdate
+                  />
+                ) : (
+                  <span className="text-5xl font-bold text-primary">---</span>
+                )
               ) : (
                 <span className="text-5xl font-bold text-primary">•••</span>
               )}
               <span className="text-sm text-muted-foreground">
-                {showVotes ? "points" : "reveals once votes unlock"}
+                {showVotes
+                  ? supportsAverage && canDisplayAverage
+                    ? "points"
+                    : "no numeric consensus"
+                  : "reveals once votes unlock"}
               </span>
             </div>
           </div>

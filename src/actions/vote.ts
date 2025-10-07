@@ -1,35 +1,33 @@
 "use server";
 import {
-  getVotesBySessionId as _getVotesbySessionId,
-  castVote as _castVote,
-  clearVotesForSession as _clearVotesForSession,
+  getVotesBySessionSlug as fetchVotesBySession,
+  castVote as writeVote,
+  clearVotesForSession as purgeVotes,
 } from "@/schema/vote";
 import { broadcastVoteCast, broadcastVotesCleared } from "@/lib/broadcast";
 
-export const getVotesBySessionId = async (sessionId: string) => {
-  const votes = await _getVotesbySessionId(sessionId);
+export const getVotesBySessionSlug = async (sessionSlug: string) => {
+  const votes = await fetchVotesBySession(sessionSlug);
 
   return votes;
 };
 
 export const castVote = async (
-  sessionId: string,
+  sessionSlug: string,
   voterName: string,
   value: string,
 ) => {
-  const newVote = await _castVote(sessionId, voterName, value);
+  const newVote = await writeVote(sessionSlug, voterName, value);
 
-  // Broadcast the vote to all connected clients
-  await broadcastVoteCast(Number(sessionId), newVote);
+  await broadcastVoteCast(sessionSlug, newVote);
 
   return newVote;
 };
 
-export const clearVotesForSession = async (sessionId: string) => {
-  const result = await _clearVotesForSession(sessionId);
+export const clearVotesForSession = async (sessionSlug: string) => {
+  const result = await purgeVotes(sessionSlug);
 
-  // Broadcast votes cleared to all connected clients
-  await broadcastVotesCleared(Number(sessionId));
+  await broadcastVotesCleared(sessionSlug);
 
   return result;
 };

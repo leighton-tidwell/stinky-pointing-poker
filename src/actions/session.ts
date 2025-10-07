@@ -1,32 +1,58 @@
 "use server";
 import {
-  getSessionById,
-  createSession as _createSession,
-  updateSession as _updateSession,
+  createSession as createSessionRecord,
+  getSessionBySlug,
+  updateSession as updateSessionRecord,
+  type CreateSessionData,
+  type SessionRecord,
 } from "@/schema/session";
 import {
   joinSessionSchema,
   type JoinSessionFormState,
 } from "@/validation/session";
+import { generateSessionSlug, generateSessionTitle } from "@/lib/session-slug";
 import { broadcastSessionUpdate } from "@/lib/broadcast";
 
-export const getSession = async (id: string) => {
-  const session = await getSessionById(Number(id));
+const ensureUniqueSlug = async () => {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const slug = generateSessionSlug();
+    const existing = await getSessionBySlug(slug);
+
+    if (!existing) {
+      return slug;
+    }
+  }
+
+  throw new Error("Unable to generate unique session slug");
+};
+
+export type CreateSessionOptions = Omit<CreateSessionData, "slug">;
+
+export const createSession = async (
+  options: CreateSessionOptions = {},
+) => {
+  const slug = await ensureUniqueSlug();
+  const providedName = options.name?.trim();
+
+  const session = await createSessionRecord({
+    slug,
+    name: providedName && providedName.length > 0 ? providedName : generateSessionTitle(),
+    createdBy: options.createdBy,
+    deckPreset: options.deckPreset,
+    includeQuestionMark: options.includeQuestionMark,
+    includeCoffeeBreak: options.includeCoffeeBreak,
+    autoReveal: options.autoReveal,
+  });
 
   return session;
 };
 
-export const createSession = async (createdBy?: string) => {
-  const session = await _createSession(createdBy);
+export const updateSession = async (id: string, data: Partial<SessionRecord>) => {
+  const session = await updateSessionRecord(Number(id), data);
 
-  return session;
-};
-
-export const updateSession = async (id: string, data: any) => {
-  const session = await _updateSession(Number(id), data);
-
-  // Broadcast the update to all connected clients
-  await broadcastSessionUpdate(Number(id), data);
+  if (session) {
+    await broadcastSessionUpdate(session.slug, data);
+  }
 
   return session;
 };
@@ -36,29 +62,29 @@ export const joinSessionAction = async (
   formData: FormData,
 ): Promise<JoinSessionFormState> => {
   try {
-    const rawSessionId = formData.get("sessionId");
+    const rawSessionSlug = formData.get("sessionSlug");
 
     const parsed = joinSessionSchema.safeParse({
-      sessionId: typeof rawSessionId === "string" ? rawSessionId : "",
+      sessionSlug: typeof rawSessionSlug === "string" ? rawSessionSlug : "",
     });
 
     if (!parsed.success) {
       return {
         errors: {
-          sessionId:
-            parsed.error.formErrors.fieldErrors.sessionId?.[0] ??
-            "Session ID is required",
+          sessionSlug:
+            parsed.error.formErrors.fieldErrors.sessionSlug?.[0] ??
+            "Session code is required",
         },
       };
     }
 
-    const session = await getSessionById(Number(parsed.data.sessionId));
+    const session = await getSessionBySlug(parsed.data.sessionSlug);
 
     if (!session) {
-      return { errors: { sessionId: "Session not found" } };
+      return { errors: { sessionSlug: "Session not found" } };
     }
 
-    return { success: { redirectTo: `/session/${session.id}` } };
+    return { success: { redirectTo: `/session/${session.slug}` } };
   } catch (error) {
     console.error("Error in joinSessionAction:", error);
 

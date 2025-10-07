@@ -13,7 +13,7 @@ import { PersonStanding, CircleMinus, Wifi } from "lucide-react";
 import { PresenceUser } from "@/hooks/usePresence";
 
 type VotingResultsCardProps = {
-  sessionId: string;
+  sessionSlug: string;
   showVotes: boolean;
   presenceUsers: PresenceUser[];
   votes: Vote[];
@@ -55,7 +55,7 @@ const AnimatedVote = ({
 };
 
 export const VotingResultsCard = ({
-  sessionId,
+  sessionSlug,
   showVotes,
   presenceUsers,
   votes,
@@ -99,10 +99,10 @@ export const VotingResultsCard = ({
     <Card className="flex h-fit flex-col gap-4 p-4">
       <CardHeader className="p-0">
         <CardTitle className="text-xl font-semibold text-primary">
-          Live Telemetry
+          Operator Status Grid
         </CardTitle>
         <CardDescription className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-          Session {sessionId}
+          Who&apos;s online and where the votes landed
         </CardDescription>
       </CardHeader>
       <CardContent className="max-h-[340px] space-y-3 overflow-auto p-0">

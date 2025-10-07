@@ -33,35 +33,35 @@ export const JoinSessionForm = () => {
   };
 
   const pending = isActionPending || isTransitionPending;
-  const sessionIdError = state.errors?.sessionId;
+  const sessionSlugError = state.errors?.sessionSlug;
 
   return (
     <form
       action={handleAction}
       className="flex w-full flex-col gap-4 sm:flex-row sm:items-end"
-      aria-describedby={sessionIdError ? "sessionId-error" : undefined}
+      aria-describedby={sessionSlugError ? "sessionSlug-error" : undefined}
     >
       <div className="w-full space-y-2">
         <label
-          htmlFor="sessionId"
+          htmlFor="sessionSlug"
           className="text-xs uppercase tracking-[0.3em] text-muted-foreground"
         >
-          Enter Session ID
+          Enter Session Code
         </label>
         <Input
-          name="sessionId"
-          id="sessionId"
-          placeholder="e.g. 8472"
+          name="sessionSlug"
+          id="sessionSlug"
+          placeholder="e.g. wobbly-otter"
           autoComplete="off"
           required
-          aria-invalid={sessionIdError ? true : undefined}
+          aria-invalid={sessionSlugError ? true : undefined}
         />
-        {sessionIdError ? (
+        {sessionSlugError ? (
           <p
-            id="sessionId-error"
+            id="sessionSlug-error"
             className="text-sm font-medium text-destructive"
           >
-            {sessionIdError}
+            {sessionSlugError}
           </p>
         ) : null}
         {state.errors?.form ? (
