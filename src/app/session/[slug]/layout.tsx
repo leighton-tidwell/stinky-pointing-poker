@@ -3,6 +3,7 @@ import { Home, Github } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionBySlug } from "@/schema/session";
+import { TipJar } from "@/components/tip-jar";
 
 export default async function SessionLayout({
   children,
@@ -59,6 +60,7 @@ export default async function SessionLayout({
       </div>
 
       <div className="relative z-10 space-y-10 pb-16">{children}</div>
+      <TipJar />
     </div>
   );
 }
