@@ -1,4 +1,4 @@
-export type DeckPreset = "fibonacci" | "powersOfTwo" | "tShirt";
+export type DeckPreset = "fibonacci" | "powersOfTwo" | "tShirt" | "custom";
 
 type DeckDefinition = {
   value: DeckPreset;
@@ -30,6 +30,13 @@ const deckDefinitions: DeckDefinition[] = [
     values: ["XXS", "XS", "S", "M", "L", "XL", "XXL"],
     supportsAverage: false,
   },
+  {
+    value: "custom",
+    label: "Custom Signals",
+    description: "Craft a bespoke vocabulary that matches how your squad estimates.",
+    values: [],
+    supportsAverage: false,
+  },
 ];
 
 const deckDefinitionByValue = deckDefinitions.reduce(
@@ -49,9 +56,16 @@ type DeckOptions = {
 export const resolveDeckValues = (
   preset: DeckPreset,
   { includeQuestionMark = true, includeCoffeeBreak = false }: DeckOptions,
+  customValues?: string[] | null,
 ) => {
   const definition = getDeckDefinition(preset);
-  const values = [...definition.values];
+  const baseValues =
+    preset === "custom" && customValues?.length
+      ? customValues
+      : definition.values;
+  const values = baseValues
+    .map((value) => value.trim())
+    .filter((value) => value.length > 0);
 
   if (includeQuestionMark) {
     values.push("?");
@@ -64,8 +78,25 @@ export const resolveDeckValues = (
   return Array.from(new Set(values));
 };
 
-export const supportsAverageForDeck = (preset: DeckPreset) =>
-  getDeckDefinition(preset).supportsAverage;
+export const supportsAverageForDeck = (
+  preset: DeckPreset,
+  customValues?: string[] | null,
+  allowCustomAverage?: boolean,
+) => {
+  if (preset === "custom") {
+    if (!allowCustomAverage) {
+      return false;
+    }
+
+    if (!customValues || customValues.length === 0) {
+      return false;
+    }
+
+    return customValues.every((value) => isNumericVoteValue(value.trim())) ?? false;
+  }
+
+  return getDeckDefinition(preset).supportsAverage;
+};
 
 export const isNumericVoteValue = (value: string) => {
   if (!value) return false;

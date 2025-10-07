@@ -42,6 +42,7 @@ export const createSession = async (
     includeQuestionMark: options.includeQuestionMark,
     includeCoffeeBreak: options.includeCoffeeBreak,
     autoReveal: options.autoReveal,
+    customDeckValues: options.customDeckValues,
   });
 
   return session;

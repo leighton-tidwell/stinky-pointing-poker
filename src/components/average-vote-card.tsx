@@ -8,12 +8,15 @@ import {
 } from "@/components/ui/card";
 import { Vote } from "@/schema/vote";
 import { RollingNumber } from "./rolling-number";
-import { isNumericVoteValue } from "@/lib/decks";
+import { isNumericVoteValue, type DeckPreset } from "@/lib/decks";
 
 type AverageVoteCardProps = {
   showVotes: boolean;
   votes: Vote[];
   supportsAverage: boolean;
+  preset: DeckPreset;
+  customAverageEnabled?: boolean;
+  customValues?: string[];
 };
 
 const calculateAverageVote = (votes?: Vote[]) => {
@@ -32,11 +35,33 @@ export const AverageVoteCard = ({
   showVotes,
   votes,
   supportsAverage,
+  preset,
+  customAverageEnabled,
+  customValues,
 }: AverageVoteCardProps) => {
   const averageValue = calculateAverageVote(votes ?? []);
   const hasVotes = (votes?.length ?? 0) > 0;
+  const customValuesNumeric = customValues?.length
+    ? customValues.every((value) => isNumericVoteValue(value))
+    : false;
 
   const canDisplayAverage = supportsAverage && averageValue !== null;
+
+  const renderDisabledMessage = () => {
+    if (preset === "custom") {
+      if (!customAverageEnabled) {
+        return "Averages are currently off for this custom deck. Enable them during setup to visualise consensus.";
+      }
+
+      if (!customValuesNumeric) {
+        return "Custom deck averages need numeric-only values. Update your signals to numbers to unlock the radar.";
+      }
+
+      return "Add numeric custom values and enable averages to chart consensus.";
+    }
+
+    return "This deck speaks in vibes, not velocity. Swap to a numeric deck to chart an average signal.";
+  };
 
   return (
     <Card className="flex h-fit flex-col gap-4 p-4">
@@ -51,8 +76,7 @@ export const AverageVoteCard = ({
       <CardContent className="mt-auto flex flex-col gap-6 p-0">
         {!supportsAverage ? (
           <div className="rounded-lg border border-dashed border-primary/30 bg-secondary/30 p-6 text-sm text-muted-foreground">
-            This deck speaks in vibes, not velocity. Swap to a numeric deck to
-            chart an average signal.
+            {renderDisabledMessage()}
           </div>
         ) : !hasVotes ? (
           <div className="rounded-lg border border-dashed border-primary/30 bg-secondary/30 p-6 text-sm text-muted-foreground">

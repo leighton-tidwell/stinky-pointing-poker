@@ -1,8 +1,8 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Settings2, PlusCircle, Check, Circle } from "lucide-react";
+import { Settings2, PlusCircle, Check, Circle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -22,6 +22,7 @@ import {
   deckOptionsCatalog,
   resolveDeckValues,
   type DeckPreset,
+  isNumericVoteValue,
 } from "@/lib/decks";
 
 const getOrCreateOperatorId = () => {
@@ -49,19 +50,73 @@ export const StartSessionButton = () => {
   const [includeCoffeeBreak, setIncludeCoffeeBreak] = useState(false);
   const [autoReveal, setAutoReveal] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [customDeckValues, setCustomDeckValues] = useState<string[]>([]);
+  const [customValueInput, setCustomValueInput] = useState("");
+  const [customDeckError, setCustomDeckError] = useState<string | null>(null);
+  const [customDeckAverageEnabled, setCustomDeckAverageEnabled] = useState(false);
 
   const deckPreview = useMemo(() => {
     const values = resolveDeckValues(deckPreset, {
       includeQuestionMark,
       includeCoffeeBreak,
-    });
+    }, deckPreset === "custom" ? customDeckValues : undefined);
     return values.slice(0, 6).join(" · ");
-  }, [deckPreset, includeQuestionMark, includeCoffeeBreak]);
+  }, [deckPreset, includeQuestionMark, includeCoffeeBreak, customDeckValues]);
+
+  const customAverageEligible = useMemo(() => {
+    if (deckPreset !== "custom") return false;
+    if (customDeckValues.length === 0) return false;
+    return customDeckValues.every((value) => isNumericVoteValue(value));
+  }, [deckPreset, customDeckValues]);
+
+  useEffect(() => {
+    if (!customAverageEligible && customDeckAverageEnabled) {
+      setCustomDeckAverageEnabled(false);
+    }
+  }, [customAverageEligible, customDeckAverageEnabled]);
+
+  const handleCustomValueAdd = (rawValue?: string) => {
+    const candidate = (rawValue ?? customValueInput).trim();
+    if (!candidate) return;
+
+    if (!/^[a-zA-Z0-9.+-]+$/.test(candidate)) {
+      setCustomDeckError("Use alphanumeric characters, plus optional . + - symbols.");
+      return;
+    }
+
+    const normalized = candidate.toUpperCase();
+
+    if (customDeckValues.includes(normalized)) {
+      setCustomDeckError("That value is already in the deck.");
+      return;
+    }
+
+    setCustomDeckValues((prev) => [...prev, normalized]);
+    setCustomValueInput("");
+    setCustomDeckError(null);
+  };
+
+  const handleCustomValueKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter" || event.key === ",") {
+      event.preventDefault();
+      handleCustomValueAdd();
+    }
+  };
+
+  const handleRemoveCustomValue = (value: string) => {
+    setCustomDeckValues((prev) => prev.filter((item) => item !== value));
+  };
 
   const handleLaunch = async () => {
     setLoading(true);
     setError(null);
     try {
+      if (deckPreset === "custom" && customDeckValues.length === 0) {
+        setError("Add at least one custom voting value before launching.");
+        setLoading(false);
+        return;
+      }
+
       const operatorId = getOrCreateOperatorId();
       const session = await createSession({
         createdBy: operatorId,
@@ -70,6 +125,11 @@ export const StartSessionButton = () => {
         includeQuestionMark,
         includeCoffeeBreak,
         autoReveal,
+        customDeckValues: deckPreset === "custom" ? customDeckValues : undefined,
+        customDeckAverageEnabled:
+          deckPreset === "custom" && customAverageEligible
+            ? customDeckAverageEnabled
+            : undefined,
       });
       setOpen(false);
       router.push(`/session/${session.slug}`);
@@ -104,8 +164,11 @@ export const StartSessionButton = () => {
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl">
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <DialogHeader>
+        <form
+          onSubmit={handleSubmit}
+          className="grid max-h-[80vh] grid-rows-[auto_1fr_auto] gap-0"
+        >
+          <DialogHeader className="sticky top-0 z-10 border-b border-primary/15 bg-card/95 py-4 backdrop-blur">
             <DialogTitle>Tune your session</DialogTitle>
             <DialogDescription>
               Dial in the deck, safety valves, and reveal behaviour before your
@@ -113,7 +176,7 @@ export const StartSessionButton = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-6">
+          <div className="scrollbar-thin scrollbar-thumb-primary/30 -mx-6 flex flex-col gap-6 overflow-y-auto px-6 py-6">
             <div className="space-y-2">
               <Label htmlFor="session-name">Session name</Label>
               <Input
@@ -142,7 +205,13 @@ export const StartSessionButton = () => {
                   <button
                     key={deck.value}
                     type="button"
-                    onClick={() => setDeckPreset(deck.value)}
+                    onClick={() => {
+                      setDeckPreset(deck.value);
+                      if (deck.value !== "custom") {
+                        setCustomDeckError(null);
+                        setCustomDeckAverageEnabled(false);
+                      }
+                    }}
                     className={cn(
                       "flex flex-col rounded-xl border px-4 py-3 text-left transition",
                       deckPreset === deck.value
@@ -168,6 +237,106 @@ export const StartSessionButton = () => {
                 Preview: {deckPreview}
               </p>
             </div>
+
+            {deckPreset === "custom" ? (
+              <div className="space-y-3 rounded-xl border border-primary/20 bg-secondary/20 p-4">
+                <div className="space-y-2">
+                  <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                    Custom voting values
+                  </span>
+                  <p className="text-sm text-muted-foreground">
+                    Tap enter after each value. Use alphanumeric tokens like
+                    <span className="font-semibold text-primary"> 1 </span>,
+                    <span className="font-semibold text-primary"> 2 </span>, or
+                    <span className="font-semibold text-primary"> XXL </span> to
+                    match your team&apos;s lingo.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={customValueInput}
+                    onChange={(event) => {
+                      setCustomValueInput(event.target.value);
+                      setCustomDeckError(null);
+                    }}
+                    onKeyDown={handleCustomValueKeyDown}
+                    placeholder="Press enter to add, e.g. 0.5"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleCustomValueAdd()}
+                    disabled={!customValueInput.trim()}
+                    className="gap-2 border-primary/30 text-primary"
+                  >
+                    Add
+                  </Button>
+                </div>
+                {customDeckError ? (
+                  <p className="text-xs font-medium text-destructive">
+                    {customDeckError}
+                  </p>
+                ) : null}
+                {customDeckValues.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {customDeckValues.map((value) => (
+                      <span
+                        key={value}
+                        className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-secondary/40 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-primary"
+                      >
+                        {value}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveCustomValue(value)}
+                          className="text-primary/70 transition hover:text-primary"
+                          aria-label={`Remove ${value}`}
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    No custom values yet — add at least one to launch.
+                  </p>
+                )}
+                <div className="space-y-2">
+                  <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                    Custom average
+                  </span>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      type="button"
+                      variant={customDeckAverageEnabled ? "default" : "outline"}
+                      disabled={!customAverageEligible}
+                      onClick={() =>
+                        customAverageEligible &&
+                        setCustomDeckAverageEnabled((prev) => !prev)
+                      }
+                      className={cn(
+                        "gap-2 border-primary/30",
+                        customDeckAverageEnabled
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary/30 text-primary",
+                        !customAverageEligible && "opacity-60",
+                      )}
+                    >
+              {customDeckAverageEnabled ? "Average enabled" : "Enable average"}
+                    </Button>
+                    {!customAverageEligible ? (
+                      <span className="text-xs text-muted-foreground">
+                        Add numeric-only values (e.g. 1, 2, 3) to unlock averages.
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        We&apos;ll show a consensus average once votes reveal.
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : null}
 
             <div className="space-y-3">
               <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
@@ -228,23 +397,26 @@ export const StartSessionButton = () => {
             </div>
           </div>
 
-          {error ? (
-            <p className="text-sm font-medium text-destructive">{error}</p>
-          ) : null}
-
-          <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:justify-between sm:gap-3">
-            <Button
-              type="button"
-              variant="ghost"
-              disabled={loading}
-              onClick={() => setOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading} className="gap-2">
-              {loading ? <Spinner /> : "Launch Session"}
-            </Button>
-          </DialogFooter>
+          <div className="sticky z-10 -mx-6 border-t border-primary/15 bg-card/95 px-6 py-4 backdrop-blur">
+            <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
+              {error ? (
+                <p className="text-sm font-medium text-destructive sm:mr-auto">
+                  {error}
+                </p>
+              ) : null}
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={loading}
+                onClick={() => setOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={loading} className="gap-2">
+                {loading ? <Spinner /> : "Launch Session"}
+              </Button>
+            </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

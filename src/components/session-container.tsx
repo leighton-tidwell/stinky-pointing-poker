@@ -64,16 +64,33 @@ export const SessionContainer = ({
   const isCreator = session?.createdBy === operatorId;
 
   const deckPreset = sanitizeDeckPreset(session?.deckPreset);
-  const deckDefinition = useMemo(() => getDeckDefinition(deckPreset), [deckPreset]);
-  const deckValues = useMemo(
-    () =>
-      resolveDeckValues(deckPreset, {
-        includeQuestionMark: session?.includeQuestionMark ?? true,
-        includeCoffeeBreak: session?.includeCoffeeBreak ?? false,
-      }),
-    [deckPreset, session?.includeQuestionMark, session?.includeCoffeeBreak],
+  const customDeckValues = useMemo(
+    () => (Array.isArray(session?.customDeckValues) ? session.customDeckValues : []),
+    [session?.customDeckValues],
   );
-  const deckSupportsAverage = supportsAverageForDeck(deckPreset);
+  const deckDefinition = useMemo(() => getDeckDefinition(deckPreset), [deckPreset]);
+  const resolvedDeckValues = useMemo(
+    () =>
+      resolveDeckValues(
+        deckPreset,
+        {
+          includeQuestionMark: session?.includeQuestionMark ?? true,
+          includeCoffeeBreak: session?.includeCoffeeBreak ?? false,
+        },
+        deckPreset === "custom" ? customDeckValues : undefined,
+      ),
+    [
+      deckPreset,
+      session?.includeQuestionMark,
+      session?.includeCoffeeBreak,
+      customDeckValues,
+    ],
+  );
+  const deckSupportsAverage = supportsAverageForDeck(
+    deckPreset,
+    deckPreset === "custom" ? customDeckValues : undefined,
+    session?.customDeckAverageEnabled,
+  );
 
   const autoRevealTriggeredRef = useRef(false);
 
@@ -257,22 +274,25 @@ export const SessionContainer = ({
       <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-3">
         <PointVotingCard
           handleCastVote={handleCastVote}
-          deckValues={deckValues}
+          deckValues={resolvedDeckValues}
           deckLabel={deckDefinition.label}
           deckDescription={deckDefinition.description}
         />
 
         <VotingResultsCard
           sessionSlug={session.slug}
-          showVotes={session.showVotes}
+          showVotes={Boolean(session.showVotes)}
           presenceUsers={presenceUsers}
           votes={votes}
         />
 
         <AverageVoteCard
-          showVotes={session.showVotes}
+          showVotes={Boolean(session.showVotes)}
           votes={votes}
           supportsAverage={deckSupportsAverage}
+          preset={deckPreset}
+          customAverageEnabled={Boolean(session.customDeckAverageEnabled)}
+          customValues={deckPreset === "custom" ? customDeckValues : undefined}
         />
       </div>
       {initialLoad && (

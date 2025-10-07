@@ -1,5 +1,6 @@
 import {
   boolean,
+  jsonb,
   pgTable,
   serial,
   text,
@@ -21,6 +22,10 @@ export const sessions = pgTable(
     includeQuestionMark: boolean("includeQuestionMark").notNull().default(true),
     includeCoffeeBreak: boolean("includeCoffeeBreak").notNull().default(false),
     autoReveal: boolean("autoReveal").notNull().default(false),
+    customDeckValues: jsonb("customDeckValues").$type<string[] | null>().default(null),
+    customDeckAverageEnabled: boolean("customDeckAverageEnabled")
+      .notNull()
+      .default(false),
     createdBy: text("createdBy"),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
@@ -37,6 +42,8 @@ export type CreateSessionData = {
   includeQuestionMark?: boolean;
   includeCoffeeBreak?: boolean;
   autoReveal?: boolean;
+  customDeckValues?: string[] | null;
+  customDeckAverageEnabled?: boolean;
 };
 
 export const getSessionTable = async () => {
@@ -71,6 +78,8 @@ export const createSession = async ({
   includeQuestionMark,
   includeCoffeeBreak,
   autoReveal,
+  customDeckValues,
+  customDeckAverageEnabled,
 }: CreateSessionData) => {
   const insertResult = await db
     .insert(sessions)
@@ -82,6 +91,8 @@ export const createSession = async ({
       includeQuestionMark: includeQuestionMark ?? true,
       includeCoffeeBreak: includeCoffeeBreak ?? false,
       autoReveal: autoReveal ?? false,
+      customDeckValues: customDeckValues ?? null,
+      customDeckAverageEnabled: customDeckAverageEnabled ?? false,
     })
     .returning();
 
