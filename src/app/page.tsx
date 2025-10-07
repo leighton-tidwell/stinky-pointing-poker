@@ -1,5 +1,6 @@
 import { JoinSessionForm } from "@/components/forms/join-session-form";
 import { StartSessionButton } from "@/components/start-session-button";
+import { ActiveSessionsBeacon } from "@/components/active-sessions-beacon";
 
 import {
   Card,
@@ -87,6 +88,9 @@ export default function Home() {
             <JoinSessionForm />
           </CardContent>
         </Card>
+        <div className="mt-6 flex justify-center">
+          <ActiveSessionsBeacon />
+        </div>
       </div>
     </main>
   );

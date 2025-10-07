@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
@@ -27,6 +27,9 @@ export const usePresence = (sessionSlug: string, username: string) => {
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
   const [presenceUsers, setPresenceUsers] = useState<PresenceUser[]>([]);
   const [operatorId] = useState(() => generateOperatorId());
+  const telemetryChannelRef = useRef<RealtimeChannel | null>(null);
+  const telemetryReadyRef = useRef(false);
+  const lastBroadcastRef = useRef<number | null>(null);
 
   useEffect(() => {
     const channelName = `session:${sessionSlug}`;
@@ -35,6 +38,16 @@ export const usePresence = (sessionSlug: string, username: string) => {
         presence: { key: operatorId },
         broadcast: { self: true }, // Enable receiving own broadcasts for ping measurement
       },
+    });
+
+    const telemetryChannel = supabase.channel("sessions:telemetry", {
+      config: { broadcast: { self: true } },
+    });
+
+    telemetryChannelRef.current = telemetryChannel;
+
+    telemetryChannel.subscribe((status) => {
+      telemetryReadyRef.current = status === "SUBSCRIBED";
     });
 
     presenceChannel
@@ -54,6 +67,25 @@ export const usePresence = (sessionSlug: string, username: string) => {
         });
 
         setPresenceUsers(users);
+
+        const activeCount = users.length;
+
+        if (
+          telemetryReadyRef.current &&
+          telemetryChannelRef.current &&
+          lastBroadcastRef.current !== activeCount
+        ) {
+          telemetryChannelRef.current.send({
+            type: "broadcast",
+            event: "session-activity",
+            payload: {
+              slug: sessionSlug,
+              activeCount,
+              timestamp: Date.now(),
+            },
+          });
+          lastBroadcastRef.current = activeCount;
+        }
       })
       .subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
@@ -69,6 +101,10 @@ export const usePresence = (sessionSlug: string, username: string) => {
 
     return () => {
       presenceChannel.unsubscribe();
+      telemetryChannel.unsubscribe();
+      telemetryChannelRef.current = null;
+      telemetryReadyRef.current = false;
+      lastBroadcastRef.current = null;
     };
   }, [sessionSlug, operatorId, username]);
 
