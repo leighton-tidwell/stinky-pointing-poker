@@ -163,10 +163,10 @@ export const StartSessionButton = () => {
           </span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="h-screen w-screen max-w-none rounded-none border-none p-0 sm:h-auto sm:w-auto sm:max-w-2xl sm:rounded-2xl sm:border">
+      <DialogContent className="h-screen w-screen max-w-none rounded-none border-none p-0 lg:h-auto lg:w-auto lg:max-w-2xl lg:rounded-2xl lg:border">
         <form
           onSubmit={handleSubmit}
-          className="flex h-full flex-col overflow-hidden sm:max-h-[80vh]"
+          className="flex h-full flex-col overflow-hidden lg:max-h-[80vh]"
         >
           <DialogHeader className="sticky top-0 z-10 border-b border-primary/15 bg-card/95 px-6 py-4 backdrop-blur">
             <DialogTitle>Tune your session</DialogTitle>
