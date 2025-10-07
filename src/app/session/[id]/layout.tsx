@@ -1,31 +1,52 @@
-import { Home } from "lucide-react";
+import { Home, Github } from "lucide-react";
 import Link from "next/link";
 
 export default function SessionLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <div className="m-auto p-8 pt-2 md:w-3/4 md:p-2">
-      <div className="mb-4 flex items-center border-b-2 border-b-blue-400 pb-2 md:pt-2">
-        <div className="flex flex-1 flex-col">
-          <span className="text-xl font-extrabold">Stinky Pointing Poker</span>
-          <span className="text-sm">
-            Created by ol&apos;{" "}
-            <a
-              title="Star it on Github"
-              target="_blank"
-              href="https://github.com/leighton-tidwell/stinky-pointing-poker"
-              className="font-bold text-blue-500 underline"
+    <div className="relative mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-10 px-6 py-10">
+      <div className="relative overflow-hidden rounded-2xl border border-primary/25 bg-secondary/30 px-8 py-7 shadow-[0_18px_60px_rgba(6,20,11,0.55)] backdrop-blur">
+        <div className="absolute -right-20 -top-24 h-56 w-56 rounded-full bg-primary/15 blur-3xl" />
+        <div className="absolute bottom-0 left-10 h-36 w-36 rounded-full bg-accent/10 blur-3xl" />
+
+        <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-4">
+            <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-secondary/40 px-4 py-1 text-xs uppercase tracking-[0.35em] text-primary">
+              <span className="size-2 rounded-full bg-primary animate-pulse" />
+              Session live
+            </span>
+            <div className="space-y-3">
+              <h1 className="text-3xl font-semibold text-primary">
+                Stinky Pointing Poker Console
+              </h1>
+              <p className="max-w-xl text-sm text-muted-foreground">
+                Coordinate estimates from anywhere. Reveal only when you&apos;re
+                ready to lock consensus.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 [font-family:var(--font-mono),monospace] text-xs uppercase tracking-[0.3em] text-muted-foreground">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 rounded-lg border border-primary/25 bg-primary/10 px-4 py-2 text-primary transition hover:border-primary hover:bg-primary/20 hover:text-primary-foreground"
             >
-              Tidwellius
+              <Home className="size-4" /> Dashboard
+            </Link>
+            <a
+              href="https://github.com/leighton-tidwell/stinky-pointing-poker"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg border border-primary/15 bg-secondary/40 px-4 py-2 transition hover:border-primary/30 hover:bg-secondary/50"
+            >
+              <Github className="size-4 text-primary" /> Repo
             </a>
-          </span>
+          </div>
         </div>
-        <Link href="/" className="flex items-center gap-2 text-blue-500">
-          Home <Home size={20} />
-        </Link>
       </div>
-      {children}
+
+      <div className="relative z-10 space-y-10 pb-16">{children}</div>
     </div>
   );
 }
