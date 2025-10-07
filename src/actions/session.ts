@@ -15,8 +15,8 @@ export const getSession = async (id: string) => {
   return session;
 };
 
-export const createSession = async () => {
-  const session = await _createSession();
+export const createSession = async (createdBy?: string) => {
+  const session = await _createSession(createdBy);
 
   return session;
 };

@@ -14,7 +14,15 @@ export const StartSessionButton = () => {
   const startSession = async () => {
     setLoading(true);
     try {
-      const session = await createSession();
+      const operatorId =
+        localStorage.getItem("operatorId") ||
+        (() => {
+          const randomNum = Math.floor(1000 + Math.random() * 9000);
+          const id = `Operator-${randomNum}`;
+          localStorage.setItem("operatorId", id);
+          return id;
+        })();
+      const session = await createSession(operatorId);
       router.push(`/session/${session.id}`);
     } catch (error) {
       console.error(error);

@@ -7,6 +7,7 @@ export const sessions = pgTable("session", {
   name: text("name").notNull(),
   storyDescription: text("storyDescription").default(""),
   showVotes: boolean("showVotes").default(false),
+  createdBy: text("createdBy"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -25,12 +26,10 @@ export const getSessionById = async (id: number) => {
   return selectResult[0];
 };
 
-export const createSession = async () => {
+export const createSession = async (createdBy?: string) => {
   const insertResult = await db
     .insert(sessions)
-    .values({
-      name: "New Session",
-    })
+    .values({ name: "New Session", createdBy })
     .returning();
 
   return insertResult[0];

@@ -10,6 +10,15 @@ export type PresenceUser = {
 };
 
 const generateOperatorId = () => {
+  if (typeof window !== "undefined") {
+    let operatorId = localStorage.getItem("operatorId");
+    if (!operatorId) {
+      const randomNum = Math.floor(1000 + Math.random() * 9000);
+      operatorId = `Operator-${randomNum}`;
+      localStorage.setItem("operatorId", operatorId);
+    }
+    return operatorId;
+  }
   const randomNum = Math.floor(1000 + Math.random() * 9000);
   return `Operator-${randomNum}`;
 };

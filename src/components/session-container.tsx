@@ -105,6 +105,7 @@ export const SessionContainer = ({
 
   const voteList = Array.isArray(votes) ? votes : [];
   const votesLocked = session?.showVotes;
+  const isCreator = session?.createdBy === operatorId;
 
   return (
     <div className="flex flex-col gap-6">
@@ -129,50 +130,52 @@ export const SessionContainer = ({
               }
             }}
           />
-          <div className="flex flex-wrap gap-3">
-            <Button
-              disabled={loading}
-              onClick={handleUpdateDescription}
-              className="gap-2"
-            >
-              {loading ? (
-                <Spinner />
-              ) : (
-                <>
-                  <span>Sync Story</span>
-                </>
-              )}
-            </Button>
-            <Button
-              disabled={loading}
-              onClick={votesLocked ? handleHideVotes : handleShowVotes}
-              variant="outline"
-              className="gap-2 border-primary/30 text-primary"
-            >
-              {loading ? (
-                <Spinner />
-              ) : votesLocked ? (
-                "Mask Votes"
-              ) : (
-                "Reveal Votes"
-              )}
-            </Button>
-            <Button
-              disabled={loading}
-              onClick={() => handleClearVotes()}
-              variant="destructive"
-              className="gap-2"
-            >
-              {loading ? (
-                <Spinner />
-              ) : (
-                <>
-                  <Trash size={16} />
-                  <span className="hidden md:inline">Reset Round</span>
-                </>
-              )}
-            </Button>
-          </div>
+          {isCreator && (
+            <div className="flex flex-wrap gap-3">
+              <Button
+                disabled={loading}
+                onClick={handleUpdateDescription}
+                className="gap-2"
+              >
+                {loading ? (
+                  <Spinner />
+                ) : (
+                  <>
+                    <span>Sync Story</span>
+                  </>
+                )}
+              </Button>
+              <Button
+                disabled={loading}
+                onClick={votesLocked ? handleHideVotes : handleShowVotes}
+                variant="outline"
+                className="gap-2 border-primary/30 text-primary"
+              >
+                {loading ? (
+                  <Spinner />
+                ) : votesLocked ? (
+                  "Mask Votes"
+                ) : (
+                  "Reveal Votes"
+                )}
+              </Button>
+              <Button
+                disabled={loading}
+                onClick={() => handleClearVotes()}
+                variant="destructive"
+                className="gap-2"
+              >
+                {loading ? (
+                  <Spinner />
+                ) : (
+                  <>
+                    <Trash size={16} />
+                    <span className="hidden md:inline">Reset Round</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
         </div>
         <div className="grid h-full gap-3 rounded-xl border border-primary/15 bg-secondary/20 p-4 text-xs uppercase tracking-[0.35em] text-muted-foreground">
           <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-secondary/30 px-4 py-3 text-foreground/80">
