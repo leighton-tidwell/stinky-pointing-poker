@@ -1,6 +1,4 @@
 "use client";
-import useSWR from "swr";
-import { fetcher } from "@/lib/utils";
 import { Vote } from "@/schema/vote";
 import { useEffect, useState } from "react";
 
@@ -12,13 +10,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { PersonStanding, CircleMinus, Wifi } from "lucide-react";
-import { Skeleton } from "./ui/skeleton";
 import { PresenceUser } from "@/hooks/usePresence";
 
 type VotingResultsCardProps = {
   sessionId: string;
   showVotes: boolean;
   presenceUsers: PresenceUser[];
+  votes: Vote[];
 };
 
 type UserStatus = {
@@ -60,16 +58,8 @@ export const VotingResultsCard = ({
   sessionId,
   showVotes,
   presenceUsers,
+  votes,
 }: VotingResultsCardProps) => {
-  const { data: votes, isLoading } = useSWR(
-    `/api/session/${sessionId}/votes`,
-    fetcher,
-  );
-
-  if (isLoading) {
-    return <Skeleton className="flex flex-col gap-2 p-2" />;
-  }
-
   const voteList = Array.isArray(votes) ? votes : [];
 
   // Create a merged list of all users (present + voted)

@@ -8,6 +8,7 @@ import {
   joinSessionSchema,
   type JoinSessionFormState,
 } from "@/validation/session";
+import { broadcastSessionUpdate } from "@/lib/broadcast";
 
 export const getSession = async (id: string) => {
   const session = await getSessionById(Number(id));
@@ -23,6 +24,9 @@ export const createSession = async (createdBy?: string) => {
 
 export const updateSession = async (id: string, data: any) => {
   const session = await _updateSession(Number(id), data);
+
+  // Broadcast the update to all connected clients
+  await broadcastSessionUpdate(Number(id), data);
 
   return session;
 };

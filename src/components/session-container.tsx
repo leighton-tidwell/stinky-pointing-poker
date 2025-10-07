@@ -2,21 +2,16 @@
 import { useEffect, useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { updateSession, getSession } from "@/actions/session";
-import {
-  getVotesBySessionId,
-  castVote,
-  clearVotesForSession,
-} from "@/actions/vote";
+import { updateSession } from "@/actions/session";
+import { castVote, clearVotesForSession } from "@/actions/vote";
 import { Spinner } from "./spinner";
 import { UsernameDialog } from "./dialogs/username-dialog";
 import { Trash } from "lucide-react";
-import useSWR, { useSWRConfig } from "swr";
-import { fetcher } from "@/lib/utils";
 import { VotingResultsCard } from "./voting-results-card";
 import { PointVotingCard } from "./point-voting-card";
 import { AverageVoteCard } from "./average-vote-card";
 import { usePresence } from "@/hooks/usePresence";
+import { useRealtimeSession } from "@/hooks/useRealtimeSession";
 
 type SessionContainerProps = { initialSession: any; initialVotes: any };
 
@@ -24,17 +19,7 @@ export const SessionContainer = ({
   initialSession,
   initialVotes,
 }: SessionContainerProps) => {
-  const { mutate } = useSWRConfig();
-  const { data: session } = useSWR(
-    `/api/session/${initialSession.id}`,
-    fetcher,
-    { initialData: initialSession, refreshInterval: 1000 },
-  );
-  const { data: votes } = useSWR(
-    `/api/session/${initialSession.id}/votes`,
-    fetcher,
-    { initialData: initialVotes, refreshInterval: 1000 },
-  );
+  const { session, votes } = useRealtimeSession(initialSession, initialVotes);
 
   const [initialLoad, setInitialLoad] = useState(true);
   const [username, setUsername] = useState("");
@@ -50,8 +35,7 @@ export const SessionContainer = ({
   const handleUpdateDescription = async () => {
     setIsLoading(true);
     try {
-      await updateSession(session.id, { storyDescription });
-      mutate(`/api/session/${session.id}`);
+      await updateSession(session.id.toString(), { storyDescription });
     } catch (error) {
       console.error(error);
     } finally {
@@ -62,8 +46,7 @@ export const SessionContainer = ({
   const handleShowVotes = async () => {
     setIsLoading(true);
     try {
-      await updateSession(session.id, { showVotes: true });
-      mutate(`/api/session/${session.id}`);
+      await updateSession(session.id.toString(), { showVotes: true });
     } catch (error) {
       console.error(error);
     } finally {
@@ -74,8 +57,7 @@ export const SessionContainer = ({
   const handleHideVotes = async () => {
     setIsLoading(true);
     try {
-      await updateSession(session.id, { showVotes: false });
-      mutate(`/api/session/${session.id}`);
+      await updateSession(session.id.toString(), { showVotes: false });
     } catch (error) {
       console.error(error);
     } finally {
@@ -84,16 +66,16 @@ export const SessionContainer = ({
   };
 
   const handleCastVote = async (value: string) => {
-    await castVote(session.id, username, value);
-    mutate(`/api/session/${session.id}/votes`);
+    await castVote(session.id.toString(), username, value);
   };
 
   const handleClearVotes = async () => {
     setIsLoading(true);
-    await clearVotesForSession(session.id);
-    await updateSession(session.id, { storyDescription: "", showVotes: false });
-    mutate(`/api/session/${session.id}/votes`);
-    mutate(`/api/session/${session.id}`);
+    await clearVotesForSession(session.id.toString());
+    await updateSession(session.id.toString(), {
+      storyDescription: "",
+      showVotes: false,
+    });
     setIsLoading(false);
   };
 
@@ -206,13 +188,14 @@ export const SessionContainer = ({
 
         {/* Voting Results */}
         <VotingResultsCard
-          sessionId={session?.id}
-          showVotes={session?.showVotes}
+          sessionId={session.id.toString()}
+          showVotes={session.showVotes}
           presenceUsers={presenceUsers}
+          votes={votes}
         />
 
         {/* Voting average */}
-        <AverageVoteCard showVotes={session?.showVotes} votes={votes} />
+        <AverageVoteCard showVotes={session.showVotes} votes={votes} />
       </div>
       {initialLoad && (
         <UsernameDialog
