@@ -31,7 +31,10 @@ export const usePresence = (sessionId: string, username: string) => {
   useEffect(() => {
     const channelName = `session:${sessionId}`;
     const presenceChannel = supabase.channel(channelName, {
-      config: { presence: { key: operatorId } },
+      config: {
+        presence: { key: operatorId },
+        broadcast: { self: true }, // Enable receiving own broadcasts for ping measurement
+      },
     });
 
     presenceChannel
@@ -84,5 +87,6 @@ export const usePresence = (sessionId: string, username: string) => {
     presenceUsers,
     operatorId,
     activeOperatorsCount: presenceUsers.length,
+    channel,
   };
 };

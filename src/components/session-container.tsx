@@ -12,6 +12,7 @@ import { PointVotingCard } from "./point-voting-card";
 import { AverageVoteCard } from "./average-vote-card";
 import { usePresence } from "@/hooks/usePresence";
 import { useRealtimeSession } from "@/hooks/useRealtimeSession";
+import { usePing } from "@/hooks/usePing";
 
 type SessionContainerProps = { initialSession: any; initialVotes: any };
 
@@ -27,10 +28,9 @@ export const SessionContainer = ({
     initialSession?.storyDescription,
   );
   const [loading, setIsLoading] = useState(false);
-  const { presenceUsers, operatorId, activeOperatorsCount } = usePresence(
-    initialSession.id,
-    username,
-  );
+  const { presenceUsers, operatorId, activeOperatorsCount, channel } =
+    usePresence(initialSession.id, username);
+  const { ping, isStable } = usePing(channel);
 
   const handleUpdateDescription = async () => {
     setIsLoading(true);
@@ -174,8 +174,16 @@ export const SessionContainer = ({
           </div>
           <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-secondary/30 px-4 py-3 text-foreground/80">
             <span>Ping</span>
-            <span className="text-lg font-semibold text-accent">
-              {loading ? "..." : "Stable"}
+            <span
+              className={`text-lg font-semibold ${
+                ping === null
+                  ? "text-muted-foreground"
+                  : isStable
+                    ? "text-accent"
+                    : "text-destructive"
+              }`}
+            >
+              {ping === null ? "..." : `${ping}ms`}
             </span>
           </div>
         </div>
