@@ -42,7 +42,7 @@ const getOrCreateOperatorId = () => {
 
 export const StartSessionButton = () => {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [loading, setLoading] = useState(false);
   const [sessionName, setSessionName] = useState("");
   const [deckPreset, setDeckPreset] = useState<DeckPreset>("fibonacci");
@@ -136,7 +136,6 @@ export const StartSessionButton = () => {
     } catch (err) {
       console.error(err);
       setError("Failed to launch the session. Please try again.");
-    } finally {
       setLoading(false);
     }
   };
@@ -149,7 +148,8 @@ export const StartSessionButton = () => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(next) => !loading && setOpen(next)}>
+    <>
+      <Dialog open={open} onOpenChange={(next) => !loading && setOpen(next)}>
       <DialogTrigger asChild>
         <Button
           type="button"
@@ -421,6 +421,26 @@ export const StartSessionButton = () => {
           </div>
         </form>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+      {loading ? (
+      <div className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-[#07110c]/70 backdrop-blur-xl">
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute left-1/2 top-20 h-[320px] w-[320px] -translate-x-1/2 rounded-full bg-primary/20 blur-[180px]" />
+          <div className="absolute right-10 bottom-10 h-[220px] w-[220px] rounded-full bg-accent/20 blur-[140px]" />
+        </div>
+        <div className="flex flex-col items-center gap-4 rounded-2xl border border-primary/25 bg-secondary/30 px-10 py-12 shadow-[0_25px_60px_rgba(6,20,11,0.55)]">
+          <Spinner />
+          <div className="space-y-1 text-center">
+            <p className="text-sm uppercase tracking-[0.35em] text-muted-foreground">
+              Calibrating session
+            </p>
+            <p className="text-base text-primary">
+              We&apos;re routing you to the new console…
+            </p>
+          </div>
+        </div>
+      </div>
+    ) : null}
+    </>
   );
 };

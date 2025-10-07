@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -20,20 +20,13 @@ export const UsernameDialog = ({
   setOpen,
   setUsername,
 }: UsernameDialogProps) => {
-  const [isMounted, setIsMounted] = useState(false);
-
   useEffect(() => {
     const localStorageUsername = localStorage.getItem("username");
     if (localStorageUsername) {
       setUsername(localStorageUsername);
     }
-    setIsMounted(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  if (!isMounted) {
-    return null;
-  }
 
   return (
     <Dialog open={true} onOpenChange={setOpen}>
