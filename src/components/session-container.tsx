@@ -116,70 +116,91 @@ export const SessionContainer = ({
     }
   }, [session]);
 
+  const voteList = Array.isArray(votes) ? votes : [];
+  const uniqueVoters = new Set(voteList.map((vote) => vote.voterName)).size;
+  const votesLocked = session?.showVotes;
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <Textarea
-          placeholder="Story description"
-          value={storyDescription}
-          onChange={(event) => {
-            setStoryDescription(event.target.value);
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" && storyDescription) {
-              handleUpdateDescription();
-            }
-          }}
-        />
-        <div className="flex gap-2">
-          <Button
-            disabled={loading}
-            className="w-fit"
-            onClick={handleUpdateDescription}
+    <div className="flex flex-col gap-6">
+      <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
+        <div className="space-y-3">
+          <label
+            htmlFor="story-description"
+            className="text-xs uppercase tracking-[0.3em] text-muted-foreground"
           >
-            {loading ? (
-              <Spinner />
-            ) : (
-              <>
-                <span className="block md:hidden">Update</span>
-                <span className="hidden md:block">Update Description</span>
-              </>
-            )}
-          </Button>
-          {session?.showVotes ? (
+            Story descriptor
+          </label>
+          <Textarea
+            id="story-description"
+            placeholder="Describe the story, acceptance criteria, or edge cases..."
+            value={storyDescription}
+            onChange={(event) => {
+              setStoryDescription(event.target.value);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && storyDescription) {
+                handleUpdateDescription();
+              }
+            }}
+          />
+          <div className="flex flex-wrap gap-3">
             <Button
               disabled={loading}
-              className="w-fit"
-              onClick={handleHideVotes}
-              variant="ghost"
+              onClick={handleUpdateDescription}
+              className="gap-2"
             >
-              {loading ? <Spinner /> : "Hide Votes"}
+              {loading ? (
+                <Spinner />
+              ) : (
+                <>
+                  <span>Sync Story</span>
+                </>
+              )}
             </Button>
-          ) : (
             <Button
               disabled={loading}
-              className="w-fit"
-              onClick={handleShowVotes}
-              variant="ghost"
+              onClick={votesLocked ? handleHideVotes : handleShowVotes}
+              variant="outline"
+              className="gap-2 border-primary/30 text-primary"
             >
-              {loading ? <Spinner /> : "Show Votes"}
+              {loading ? <Spinner /> : votesLocked ? "Mask Votes" : "Reveal Votes"}
             </Button>
-          )}
-          <Button
-            disabled={loading}
-            className="ml-auto w-fit"
-            onClick={() => handleClearVotes()}
-            variant="destructive"
-          >
-            {loading ? (
-              <Spinner />
-            ) : (
-              <>
-                <Trash size={18} />
-                <span className="hidden md:block">Clear Votes</span>
-              </>
-            )}
-          </Button>
+            <Button
+              disabled={loading}
+              onClick={() => handleClearVotes()}
+              variant="destructive"
+              className="gap-2"
+            >
+              {loading ? (
+                <Spinner />
+              ) : (
+                <>
+                  <Trash size={16} />
+                  <span className="hidden md:inline">Reset Round</span>
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+        <div className="grid h-full gap-3 rounded-xl border border-primary/15 bg-secondary/20 p-4 text-xs uppercase tracking-[0.35em] text-muted-foreground">
+          <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-secondary/30 px-4 py-3 text-foreground/80">
+            <span>Active operators</span>
+            <span className="text-lg font-semibold text-primary">
+              {uniqueVoters}
+            </span>
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-secondary/30 px-4 py-3 text-foreground/80">
+            <span>Vote status</span>
+            <span className="text-lg font-semibold text-primary">
+              {votesLocked ? "Decrypted" : "Encrypted"}
+            </span>
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-secondary/30 px-4 py-3 text-foreground/80">
+            <span>Ping</span>
+            <span className="text-lg font-semibold text-accent">
+              {loading ? "..." : "Stable"}
+            </span>
+          </div>
         </div>
       </div>
 

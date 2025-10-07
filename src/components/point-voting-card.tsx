@@ -16,17 +16,22 @@ type PointVotingCardProps = {
 
 export const PointVotingCard = ({ handleCastVote }: PointVotingCardProps) => {
   return (
-    <Card className="flex h-fit flex-col gap-2 p-2">
-      <CardHeader>
-        <CardTitle>Point Voting</CardTitle>
-        <CardDescription>Choose a point value</CardDescription>
+    <Card className="flex h-fit flex-col gap-4 p-4">
+      <CardHeader className="p-0">
+        <CardTitle className="text-xl font-semibold text-primary">
+          Voting Console
+        </CardTitle>
+        <CardDescription className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+          Choose a signal to transmit
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="flex flex-wrap gap-2">
+      <CardContent className="p-0">
+        <div className="grid grid-cols-4 gap-2">
           {POINT_VALUES.map((value) => (
             <Button
               key={value}
-              className="flex-1 rounded bg-blue-500 p-2 text-white"
+              variant="ghost"
+              className="h-12 border border-primary/20 bg-secondary/40 text-lg font-semibold text-foreground/90 transition hover:-translate-y-0.5 hover:border-primary hover:bg-primary/20 hover:text-primary-foreground"
               onClick={() => handleCastVote(value)}
             >
               {value}

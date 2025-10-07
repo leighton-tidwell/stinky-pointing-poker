@@ -38,14 +38,20 @@ export const JoinSessionForm = () => {
   return (
     <form
       action={handleAction}
-      className="flex gap-2"
+      className="flex w-full flex-col gap-4 sm:flex-row sm:items-end"
       aria-describedby={sessionIdError ? "sessionId-error" : undefined}
     >
-      <div className="flex-grow space-y-2">
+      <div className="w-full space-y-2">
+        <label
+          htmlFor="sessionId"
+          className="text-xs uppercase tracking-[0.3em] text-muted-foreground"
+        >
+          Enter Session ID
+        </label>
         <Input
           name="sessionId"
           id="sessionId"
-          placeholder="Enter Session ID"
+          placeholder="e.g. 8472"
           autoComplete="off"
           required
           aria-invalid={sessionIdError ? true : undefined}
@@ -64,8 +70,12 @@ export const JoinSessionForm = () => {
           </p>
         ) : null}
       </div>
-      <Button type="submit" disabled={pending}>
-        {pending ? <Spinner /> : "Join Session"}
+      <Button
+        type="submit"
+        disabled={pending}
+        className="w-full sm:w-auto"
+      >
+        {pending ? <Spinner /> : "Beam Me In"}
       </Button>
     </form>
   );

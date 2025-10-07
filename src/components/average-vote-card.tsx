@@ -28,29 +28,43 @@ const calculateAverageVote = (votes?: Vote[]) => {
 };
 
 export const AverageVoteCard = ({ showVotes, votes }: AverageVoteCardProps) => {
+  const hasVotes = votes?.length ?? 0;
+
   return (
-    <Card className="flex h-fit flex-col gap-2 p-2">
-      <CardHeader>
-        <CardTitle>Average Vote</CardTitle>
-        <CardDescription>
-          {showVotes ? "Results" : "Waiting for votes"}
+    <Card className="flex h-fit flex-col gap-4 p-4">
+      <CardHeader className="p-0">
+        <CardTitle className="text-xl font-semibold text-primary">
+          Consensus Radar
+        </CardTitle>
+        <CardDescription className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+          Collective signal strength
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        {votes?.length === 0 ? (
-          <div>No votes yet</div>
+      <CardContent className="mt-auto flex flex-col gap-6 p-0">
+        {!hasVotes ? (
+          <div className="rounded-lg border border-dashed border-primary/30 bg-secondary/30 p-6 text-sm text-muted-foreground">
+            Awaiting transmissions. Once everyone locks in, the average will
+            materialise here.
+          </div>
         ) : (
-          <div>
-            <div>
-              {showVotes
-                ? "The average vote is"
-                : "The average vote will appear here once all votes are in"}
-            </div>
-            <div className="text-2xl font-extrabold">
-              {showVotes ? calculateAverageVote(votes) : "¯\\_(ツ)_/¯"}
+          <div className="space-y-3">
+            <span className="text-xs uppercase tracking-[0.35em] text-muted-foreground">
+              {showVotes ? "Live average" : "Encrypted average"}
+            </span>
+            <div className="flex items-baseline gap-3">
+              <span className="text-5xl font-bold text-primary">
+                {showVotes ? calculateAverageVote(votes) : "•••"}
+              </span>
+              <span className="text-sm text-muted-foreground">
+                {showVotes ? "points" : "reveals once votes unlock"}
+              </span>
             </div>
           </div>
         )}
+        <div className="rounded-lg border border-primary/10 bg-secondary/20 p-4 text-xs text-muted-foreground">
+          <span className="font-semibold text-primary">Tip:</span> Challenge the
+          outliers before revealing to keep your estimates sharp.
+        </div>
       </CardContent>
     </Card>
   );

@@ -37,10 +37,12 @@ export const UsernameDialog = ({
 
   return (
     <Dialog open={true} onOpenChange={setOpen}>
-      <DialogContent>
+      <DialogContent className="border-primary/25">
         <DialogHeader>
-          <DialogTitle>Who are you?</DialogTitle>
-          <DialogDescription>Enter a name</DialogDescription>
+          <DialogTitle className="text-primary">Identify yourself</DialogTitle>
+          <DialogDescription className="text-muted-foreground">
+            We&apos;ll tag your pings with this moniker.
+          </DialogDescription>
         </DialogHeader>
         <Input
           placeholder="john doe"
@@ -57,13 +59,14 @@ export const UsernameDialog = ({
           required
         />
         <Button
+          className="mt-2 w-full"
           onClick={() => {
             if (username) {
               setOpen(false);
             }
           }}
         >
-          Join Session
+          Confirm Handle
         </Button>
       </DialogContent>
     </Dialog>

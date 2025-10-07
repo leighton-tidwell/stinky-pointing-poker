@@ -28,14 +28,15 @@ export const StartSessionButton = () => {
       type="button"
       onClick={startSession}
       disabled={loading}
-      className="m-auto gap-2"
+      variant="outline"
+      className="m-auto gap-2 border-primary/30 text-primary hover:border-primary hover:text-primary-foreground"
     >
       {loading ? (
         <Spinner />
       ) : (
         <>
-          Start New Session
-          <PlusCircle />
+          Launch New Session
+          <PlusCircle className="size-4" />
         </>
       )}
     </Button>

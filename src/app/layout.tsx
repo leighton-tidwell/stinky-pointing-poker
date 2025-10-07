@@ -1,5 +1,5 @@
 import "@/styles/globals.css";
-import { Inter as FontSans } from "next/font/google";
+import { Space_Grotesk as FontSans, JetBrains_Mono as FontMono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
 
 import { cn } from "@/lib/utils";
@@ -9,6 +9,13 @@ import type { Metadata } from "next";
 const fontSans = FontSans({
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap",
+});
+
+const fontMono = FontMono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
 });
 
 export default function RootLayout({
@@ -21,8 +28,9 @@ export default function RootLayout({
       <head />
       <body
         className={cn(
-          "min-h-screen bg-background font-sans antialiased",
+          "min-h-screen bg-background font-sans antialiased text-foreground",
           fontSans.variable,
+          fontMono.variable,
         )}
       >
         {children}
