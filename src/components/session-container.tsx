@@ -272,28 +272,34 @@ export const SessionContainer = ({
       </div>
 
       <div className="grid gap-4 sm:grid-cols-1 md:grid-cols-3">
-        <PointVotingCard
-          handleCastVote={handleCastVote}
-          deckValues={resolvedDeckValues}
-          deckLabel={deckDefinition.label}
-          deckDescription={deckDefinition.description}
-        />
+        <div className="order-1">
+          <PointVotingCard
+            handleCastVote={handleCastVote}
+            deckValues={resolvedDeckValues}
+            deckLabel={deckDefinition.label}
+            deckDescription={deckDefinition.description}
+          />
+        </div>
 
-        <VotingResultsCard
-          sessionSlug={session.slug}
-          showVotes={Boolean(session.showVotes)}
-          presenceUsers={presenceUsers}
-          votes={votes}
-        />
+        <div className="order-3 md:order-2">
+          <VotingResultsCard
+            sessionSlug={session.slug}
+            showVotes={Boolean(session.showVotes)}
+            presenceUsers={presenceUsers}
+            votes={votes}
+          />
+        </div>
 
-        <AverageVoteCard
-          showVotes={Boolean(session.showVotes)}
-          votes={votes}
-          supportsAverage={deckSupportsAverage}
-          preset={deckPreset}
-          customAverageEnabled={Boolean(session.customDeckAverageEnabled)}
-          customValues={deckPreset === "custom" ? customDeckValues : undefined}
-        />
+        <div className="order-2 md:order-3">
+          <AverageVoteCard
+            showVotes={Boolean(session.showVotes)}
+            votes={votes}
+            supportsAverage={deckSupportsAverage}
+            preset={deckPreset}
+            customAverageEnabled={Boolean(session.customDeckAverageEnabled)}
+            customValues={deckPreset === "custom" ? customDeckValues : undefined}
+          />
+        </div>
       </div>
       {initialLoad && (
         <UsernameDialog
