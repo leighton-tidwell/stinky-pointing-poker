@@ -42,7 +42,7 @@ const getOrCreateOperatorId = () => {
 
 export const StartSessionButton = () => {
   const router = useRouter();
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [sessionName, setSessionName] = useState("");
   const [deckPreset, setDeckPreset] = useState<DeckPreset>("fibonacci");
