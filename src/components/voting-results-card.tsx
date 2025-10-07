@@ -2,6 +2,7 @@
 import useSWR from "swr";
 import { fetcher } from "@/lib/utils";
 import { Vote } from "@/schema/vote";
+import { useEffect, useState } from "react";
 
 import {
   Card,
@@ -25,6 +26,34 @@ type UserStatus = {
   isOnline: boolean;
   vote: Vote | null;
   isTemporary: boolean;
+};
+
+const AnimatedVote = ({
+  value,
+  isRevealed,
+}: {
+  value: string;
+  isRevealed: boolean;
+}) => {
+  const [animate, setAnimate] = useState(false);
+
+  useEffect(() => {
+    setAnimate(true);
+    const timer = setTimeout(() => setAnimate(false), 600);
+    return () => clearTimeout(timer);
+  }, [value]);
+
+  return (
+    <span
+      className={`inline-block rounded px-2 py-1 text-sm font-semibold transition-all duration-300 ${
+        isRevealed
+          ? "bg-primary/20 text-primary-foreground"
+          : "text-muted-foreground"
+      } ${animate ? "scale-125 shadow-[0_0_20px_rgba(var(--primary-rgb,34,197,94),0.5)]" : "scale-100"}`}
+    >
+      {isRevealed ? value : "•••"}
+    </span>
+  );
 };
 
 export const VotingResultsCard = ({
@@ -109,13 +138,7 @@ export const VotingResultsCard = ({
                 </span>
               </span>
               {user.vote ? (
-                showVotes ? (
-                  <span className="rounded bg-primary/20 px-2 py-1 text-sm font-semibold text-primary-foreground">
-                    {user.vote.value}
-                  </span>
-                ) : (
-                  <span className="text-muted-foreground">•••</span>
-                )
+                <AnimatedVote value={user.vote.value} isRevealed={showVotes} />
               ) : user.isOnline ? (
                 <CircleMinus className="size-4 text-muted-foreground/50" />
               ) : null}

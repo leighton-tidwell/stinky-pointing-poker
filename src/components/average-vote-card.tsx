@@ -1,3 +1,4 @@
+"use client";
 import {
   Card,
   CardContent,
@@ -6,13 +7,11 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Vote } from "@/schema/vote";
+import { useEffect, useState } from "react";
 
 const POINT_VALUES = ["1", "2", "3", "5", "8", "13", "21", "?"];
 
-type AverageVoteCardProps = {
-  showVotes: boolean;
-  votes: Vote[];
-};
+type AverageVoteCardProps = { showVotes: boolean; votes: Vote[] };
 
 const calculateAverageVote = (votes?: Vote[]) => {
   const filteredVotes = votes?.filter((vote) => vote.value !== "?");
@@ -29,6 +28,15 @@ const calculateAverageVote = (votes?: Vote[]) => {
 
 export const AverageVoteCard = ({ showVotes, votes }: AverageVoteCardProps) => {
   const hasVotes = votes?.length ?? 0;
+  const [animate, setAnimate] = useState(false);
+
+  useEffect(() => {
+    if (hasVotes > 0) {
+      setAnimate(true);
+      const timer = setTimeout(() => setAnimate(false), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [hasVotes]);
 
   return (
     <Card className="flex h-fit flex-col gap-4 p-4">
@@ -52,7 +60,13 @@ export const AverageVoteCard = ({ showVotes, votes }: AverageVoteCardProps) => {
               {showVotes ? "Live average" : "Encrypted average"}
             </span>
             <div className="flex items-baseline gap-3">
-              <span className="text-5xl font-bold text-primary">
+              <span
+                className={`text-5xl font-bold text-primary transition-all duration-300 ${
+                  animate
+                    ? "scale-110 drop-shadow-[0_0_15px_rgba(var(--primary-rgb,34,197,94),0.7)]"
+                    : "scale-100"
+                }`}
+              >
                 {showVotes ? calculateAverageVote(votes) : "•••"}
               </span>
               <span className="text-sm text-muted-foreground">
