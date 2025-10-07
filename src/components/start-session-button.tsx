@@ -163,12 +163,12 @@ export const StartSessionButton = () => {
           </span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="h-screen w-screen max-w-none rounded-none border-none p-0 sm:h-auto sm:w-auto sm:max-w-2xl sm:rounded-2xl sm:border">
         <form
           onSubmit={handleSubmit}
-          className="grid max-h-[80vh] grid-rows-[auto_1fr_auto] gap-0"
+          className="flex h-full flex-col overflow-hidden sm:max-h-[80vh]"
         >
-          <DialogHeader className="sticky top-0 z-10 border-b border-primary/15 bg-card/95 py-4 backdrop-blur">
+          <DialogHeader className="sticky top-0 z-10 border-b border-primary/15 bg-card/95 px-6 py-4 backdrop-blur">
             <DialogTitle>Tune your session</DialogTitle>
             <DialogDescription>
               Dial in the deck, safety valves, and reveal behaviour before your
@@ -176,7 +176,8 @@ export const StartSessionButton = () => {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="scrollbar-thin scrollbar-thumb-primary/30 -mx-6 flex flex-col gap-6 overflow-y-auto px-6 py-6">
+          <div className="scrollbar-thin scrollbar-thumb-primary/30 flex-1 overflow-y-auto px-6 py-6">
+            <div className="flex flex-col gap-6 pb-20 sm:pb-6">
             <div className="space-y-2">
               <Label htmlFor="session-name">Session name</Label>
               <Input
@@ -395,9 +396,10 @@ export const StartSessionButton = () => {
                 When every named operator has voted, votes flip automatically.
               </p>
             </div>
+            </div>
           </div>
 
-          <div className="sticky z-10 -mx-6 border-t border-primary/15 bg-card/95 px-6 py-4 backdrop-blur">
+          <div className="sticky bottom-0 border-t border-primary/15 bg-card/95 px-6 py-4 backdrop-blur">
             <DialogFooter className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
               {error ? (
                 <p className="text-sm font-medium text-destructive sm:mr-auto">
