@@ -1,79 +1,72 @@
 "use client";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { Spinner } from "@/components/spinner";
-import { getSession } from "@/actions/session";
+import { useActionState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-const formSchema = z.object({
-  sessionId: z.string().min(1, { message: "Session ID is required" }),
-});
+import { joinSessionAction } from "@/actions/session";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/spinner";
+import { type JoinSessionFormState } from "@/validation/session";
+
+const initialState: JoinSessionFormState = { errors: {} };
 
 export const JoinSessionForm = () => {
   const router = useRouter();
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      sessionId: "",
-    },
-  });
+  const [state, formAction, isActionPending] = useActionState(
+    joinSessionAction,
+    initialState,
+  );
+  const [isTransitionPending, startTransition] = useTransition();
 
-  const isLoading = form.formState.isSubmitting;
-
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    try {
-      const session = await getSession(data.sessionId);
-
-      //if no session, set a form error that the session was not found
-      if (!session) {
-        form.setError("sessionId", {
-          message: "Session not found",
-        });
-        return;
-      }
-
-      router.push(`/session/${session.id}`);
-    } catch (error) {
-      console.error(error);
+  // Handle client-side redirect when server action returns success
+  useEffect(() => {
+    if (state.success?.redirectTo) {
+      router.push(state.success.redirectTo);
     }
+  }, [state.success, router]);
+
+  const handleAction = (formData: FormData) => {
+    startTransition(() => {
+      formAction(formData);
+    });
   };
 
+  const pending = isActionPending || isTransitionPending;
+  const sessionIdError = state.errors?.sessionId;
+
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex gap-2">
-        <FormField
-          control={form.control}
+    <form
+      action={handleAction}
+      className="flex gap-2"
+      aria-describedby={sessionIdError ? "sessionId-error" : undefined}
+    >
+      <div className="flex-grow space-y-2">
+        <Input
           name="sessionId"
-          render={({ field }) => (
-            <FormItem className="flex-grow">
-              <FormControl>
-                <Input
-                  placeholder="Enter Session ID"
-                  autoComplete="off"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          id="sessionId"
+          placeholder="Enter Session ID"
+          autoComplete="off"
+          required
+          aria-invalid={sessionIdError ? true : undefined}
         />
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? <Spinner /> : "Join Session"}
-        </Button>
-      </form>
-    </Form>
+        {sessionIdError ? (
+          <p
+            id="sessionId-error"
+            className="text-sm font-medium text-destructive"
+          >
+            {sessionIdError}
+          </p>
+        ) : null}
+        {state.errors?.form ? (
+          <p className="text-sm font-medium text-destructive">
+            {state.errors.form}
+          </p>
+        ) : null}
+      </div>
+      <Button type="submit" disabled={pending}>
+        {pending ? <Spinner /> : "Join Session"}
+      </Button>
+    </form>
   );
 };

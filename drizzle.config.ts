@@ -5,8 +5,8 @@ dotenv.config({ path: ".env.development.local" });
 export default {
   schema: "./src/schema/*",
   out: "./drizzle",
-  driver: "pg",
+  dialect: "postgresql",
   dbCredentials: {
-    connectionString: process.env.POSTGRES_URL ?? "",
+    url: process.env.POSTGRES_URL ?? "",
   },
 } satisfies Config;
