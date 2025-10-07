@@ -1,4 +1,5 @@
 import { Home } from "lucide-react";
+import Link from "next/link";
 
 export default function SessionLayout({
   children,
@@ -20,9 +21,9 @@ export default function SessionLayout({
             </a>
           </span>
         </div>
-        <a href="/" className="flex items-center gap-2 text-blue-500">
+        <Link href="/" className="flex items-center gap-2 text-blue-500">
           Home <Home size={20} />
-        </a>
+        </Link>
       </div>
       {children}
     </div>

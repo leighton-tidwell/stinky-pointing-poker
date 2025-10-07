@@ -3,13 +3,10 @@ import { getSessionById } from "@/schema/session";
 import { getVotesBySessionId } from "@/schema/vote";
 import { redirect } from "next/navigation";
 
-export default async function SessionPage({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const session = await getSessionById(Number(params.id));
-  const votes = await getVotesBySessionId(params.id);
+export default async function SessionPage(props: { params: Promise<{ id: string }> }) {
+  const { id } = await props.params;
+  const session = await getSessionById(Number(id));
+  const votes = await getVotesBySessionId(id);
 
   if (!session) {
     redirect("/");

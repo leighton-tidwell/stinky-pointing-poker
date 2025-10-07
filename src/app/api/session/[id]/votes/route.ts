@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { getVotesBySessionId } from "@/schema/vote";
 
 export async function GET(
-  request: Request,
-  { params }: { params: { id: string } },
+  _request: Request,
+  props: { params: Promise<{ id: string }> },
 ) {
-  const votes = await getVotesBySessionId(params.id);
+  const { id } = await props.params;
+  const votes = await getVotesBySessionId(id);
 
   return NextResponse.json(votes);
 }
