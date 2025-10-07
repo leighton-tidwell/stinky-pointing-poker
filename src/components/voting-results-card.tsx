@@ -10,17 +10,27 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { PersonStanding } from "lucide-react";
+import { PersonStanding, CircleMinus, Wifi } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
+import { PresenceUser } from "@/hooks/usePresence";
 
 type VotingResultsCardProps = {
   sessionId: string;
   showVotes: boolean;
+  presenceUsers: PresenceUser[];
+};
+
+type UserStatus = {
+  username: string;
+  isOnline: boolean;
+  vote: Vote | null;
+  isTemporary: boolean;
 };
 
 export const VotingResultsCard = ({
   sessionId,
   showVotes,
+  presenceUsers,
 }: VotingResultsCardProps) => {
   const { data: votes, isLoading } = useSWR(
     `/api/session/${sessionId}/votes`,
@@ -32,8 +42,38 @@ export const VotingResultsCard = ({
   }
 
   const voteList = Array.isArray(votes) ? votes : [];
-  const sortedVotesByUserName = [...voteList].sort((a: Vote, b: Vote) =>
-    a.voterName.localeCompare(b.voterName),
+
+  // Create a merged list of all users (present + voted)
+  const userStatusMap = new Map<string, UserStatus>();
+
+  // Add all present users
+  presenceUsers.forEach((user) => {
+    userStatusMap.set(user.username, {
+      username: user.username,
+      isOnline: true,
+      vote: null,
+      isTemporary: user.isTemporary,
+    });
+  });
+
+  // Add/update with vote information
+  voteList.forEach((vote: Vote) => {
+    const existing = userStatusMap.get(vote.voterName);
+    if (existing) {
+      existing.vote = vote;
+    } else {
+      // User voted but is now offline
+      userStatusMap.set(vote.voterName, {
+        username: vote.voterName,
+        isOnline: false,
+        vote: vote,
+        isTemporary: false,
+      });
+    }
+  });
+
+  const userStatuses = Array.from(userStatusMap.values()).sort((a, b) =>
+    a.username.localeCompare(b.username),
   );
 
   return (
@@ -47,28 +87,38 @@ export const VotingResultsCard = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="max-h-[340px] space-y-3 overflow-auto p-0">
-        {voteList.length === 0 && (
+        {userStatuses.length === 0 && (
           <div className="rounded-lg border border-dashed border-primary/30 bg-secondary/30 p-6 text-center text-sm text-muted-foreground">
-            No votes detected yet. Waiting for operators…
+            No operators detected yet. Waiting for connections…
           </div>
         )}
-        <ul className="space-y-2 [font-family:var(--font-mono),monospace] text-sm">
-          {sortedVotesByUserName.map((vote: Vote) => (
+        <ul className="space-y-2 text-sm [font-family:var(--font-mono),monospace]">
+          {userStatuses.map((user) => (
             <li
-              key={vote.id}
+              key={user.username}
               className="flex items-center justify-between rounded-lg border border-primary/10 bg-secondary/30 px-3 py-2 text-foreground/90"
             >
               <span className="flex items-center gap-2 tracking-tight">
-                <PersonStanding className="size-4 text-primary/80" />
-                <span>{vote.voterName}</span>
-              </span>
-              {showVotes ? (
-                <span className="rounded bg-primary/20 px-2 py-1 text-sm font-semibold text-primary-foreground">
-                  {vote.value}
+                {user.isOnline ? (
+                  <Wifi className="size-4 text-green-500" />
+                ) : (
+                  <PersonStanding className="size-4 text-muted-foreground/50" />
+                )}
+                <span className={!user.isOnline ? "text-muted-foreground" : ""}>
+                  {user.username}
                 </span>
-              ) : (
-                <span className="text-muted-foreground">•••</span>
-              )}
+              </span>
+              {user.vote ? (
+                showVotes ? (
+                  <span className="rounded bg-primary/20 px-2 py-1 text-sm font-semibold text-primary-foreground">
+                    {user.vote.value}
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">•••</span>
+                )
+              ) : user.isOnline ? (
+                <CircleMinus className="size-4 text-muted-foreground/50" />
+              ) : null}
             </li>
           ))}
         </ul>

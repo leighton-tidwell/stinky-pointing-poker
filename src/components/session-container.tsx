@@ -16,11 +16,9 @@ import { fetcher } from "@/lib/utils";
 import { VotingResultsCard } from "./voting-results-card";
 import { PointVotingCard } from "./point-voting-card";
 import { AverageVoteCard } from "./average-vote-card";
+import { usePresence } from "@/hooks/usePresence";
 
-type SessionContainerProps = {
-  initialSession: any;
-  initialVotes: any;
-};
+type SessionContainerProps = { initialSession: any; initialVotes: any };
 
 export const SessionContainer = ({
   initialSession,
@@ -30,18 +28,12 @@ export const SessionContainer = ({
   const { data: session } = useSWR(
     `/api/session/${initialSession.id}`,
     fetcher,
-    {
-      initialData: initialSession,
-      refreshInterval: 1000,
-    },
+    { initialData: initialSession, refreshInterval: 1000 },
   );
   const { data: votes } = useSWR(
     `/api/session/${initialSession.id}/votes`,
     fetcher,
-    {
-      initialData: initialVotes,
-      refreshInterval: 1000,
-    },
+    { initialData: initialVotes, refreshInterval: 1000 },
   );
 
   const [initialLoad, setInitialLoad] = useState(true);
@@ -50,13 +42,15 @@ export const SessionContainer = ({
     initialSession?.storyDescription,
   );
   const [loading, setIsLoading] = useState(false);
+  const { presenceUsers, operatorId, activeOperatorsCount } = usePresence(
+    initialSession.id,
+    username,
+  );
 
   const handleUpdateDescription = async () => {
     setIsLoading(true);
     try {
-      await updateSession(session.id, {
-        storyDescription,
-      });
+      await updateSession(session.id, { storyDescription });
       mutate(`/api/session/${session.id}`);
     } catch (error) {
       console.error(error);
@@ -68,9 +62,7 @@ export const SessionContainer = ({
   const handleShowVotes = async () => {
     setIsLoading(true);
     try {
-      await updateSession(session.id, {
-        showVotes: true,
-      });
+      await updateSession(session.id, { showVotes: true });
       mutate(`/api/session/${session.id}`);
     } catch (error) {
       console.error(error);
@@ -82,9 +74,7 @@ export const SessionContainer = ({
   const handleHideVotes = async () => {
     setIsLoading(true);
     try {
-      await updateSession(session.id, {
-        showVotes: false,
-      });
+      await updateSession(session.id, { showVotes: false });
       mutate(`/api/session/${session.id}`);
     } catch (error) {
       console.error(error);
@@ -101,10 +91,7 @@ export const SessionContainer = ({
   const handleClearVotes = async () => {
     setIsLoading(true);
     await clearVotesForSession(session.id);
-    await updateSession(session.id, {
-      storyDescription: "",
-      showVotes: false,
-    });
+    await updateSession(session.id, { storyDescription: "", showVotes: false });
     mutate(`/api/session/${session.id}/votes`);
     mutate(`/api/session/${session.id}`);
     setIsLoading(false);
@@ -117,7 +104,6 @@ export const SessionContainer = ({
   }, [session]);
 
   const voteList = Array.isArray(votes) ? votes : [];
-  const uniqueVoters = new Set(voteList.map((vote) => vote.voterName)).size;
   const votesLocked = session?.showVotes;
 
   return (
@@ -163,7 +149,13 @@ export const SessionContainer = ({
               variant="outline"
               className="gap-2 border-primary/30 text-primary"
             >
-              {loading ? <Spinner /> : votesLocked ? "Mask Votes" : "Reveal Votes"}
+              {loading ? (
+                <Spinner />
+              ) : votesLocked ? (
+                "Mask Votes"
+              ) : (
+                "Reveal Votes"
+              )}
             </Button>
             <Button
               disabled={loading}
@@ -186,7 +178,7 @@ export const SessionContainer = ({
           <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-secondary/30 px-4 py-3 text-foreground/80">
             <span>Active operators</span>
             <span className="text-lg font-semibold text-primary">
-              {uniqueVoters}
+              {activeOperatorsCount}
             </span>
           </div>
           <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-secondary/30 px-4 py-3 text-foreground/80">
@@ -213,6 +205,7 @@ export const SessionContainer = ({
         <VotingResultsCard
           sessionId={session?.id}
           showVotes={session?.showVotes}
+          presenceUsers={presenceUsers}
         />
 
         {/* Voting average */}
