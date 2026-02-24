@@ -6,7 +6,28 @@ updates:
       interval: "weekly"
     open-pull-requests-limit: 10
     groups:
+      next:
+        patterns:
+          - "next"
+          - "next-*"
+          - "@next/*"
+          - "eslint-config-next"
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
       minor-and-patch:
         update-types:
           - "minor"
           - "patch"
+        exclude-patterns:
+          - "next"
+          - "next-*"
+          - "@next/*"
+          - "eslint-config-next"
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
